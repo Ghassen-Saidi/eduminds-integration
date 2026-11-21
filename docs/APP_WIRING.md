@@ -1,125 +1,71 @@
-# Wiring the app (the six edits)
+# Wiring the app
 
-The integration is designed to be dropped into `edu-minds-app` without touching
-its gaze/stereo logic. Everything below is additive except two lines.
+The integration is designed to be dropped into `edu-minds-app` without
+touching its gaze/stereo logic.
 
-## 1. Vite proxy — one origin, no CORS, no second certificate
-
-`vite.config.js`:
+## 1. Vite proxy
 
 ```js
 export default defineConfig({
   plugins: [basicSsl()],
   server: {
     host: true,
-    proxy: { '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true, rewrite: (p) => p.replace(/^\/api/, '') } },
+    proxy: { '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true, rewrite: (p) => p.replace(/^\\/api/, '') } },
   },
 });
 ```
 
-With this, `POST /api/v1/simulate` from the phone reaches the laptop's service
-through the same HTTPS origin as the page. This is also what a Cloudflare
-Tunnel needs: one hostname, `/api` proxied, nothing on a second port.
+The phone reaches the simulator through the same HTTPS origin as the page.
 
-## 2. Load the lab list from the shared registry
+## 2. Load the shared lab registry
 
-`src/labs.js` becomes:
+Import `shared/labs.json` and map each app lab id to its simulator scenario.
+The database lab id and simulator scenario are separate values.
 
-```js
-import registry from '../../shared/labs.json';       // path depends where you vendor the folder
-export const LABS = registry.labs.map((l) => ({ id: l.id, code: l.code, title: l.title_fr, sub: l.sub_fr, scenario: l.scenario, template: l.template }));
-```
+## 3. Create one runtime per lab
 
-`lab.scenario` is what the simulator needs; `lab.id` stays what the database
-needs. That is the mapping that was missing.
+Create the `createSimClient` and `createLabRuntime` instances from
+`startSim(lab)`. Pass the existing `logEvent` callback, a UUID generator,
+and the scene's `applySimState` renderer.
 
-## 3. One runtime per lab, created on startLab
+## 4. Camera callback
 
 ```js
-import { createSimClient } from '../../eduminds-integration/src/simClient.js';
-import { createLabRuntime } from '../../eduminds-integration/src/appBridge.js';
-import { parseTokens, tokensByMarker } from '../../eduminds-integration/src/tokens.js';
-import componentsCsv from '../../shared/components.csv?raw';
-import eventMap from '../../shared/events.map.json';
-import template from /* lab.template */ '../../shared/templates/tp1_slots.json';
-
-const byMarker = tokensByMarker(parseTokens(componentsCsv));
-
-let runtime = null;
-let client = null;
-
-export function startSim(lab) {
-  client = createSimClient({ scenario: lab.scenario, onStatus: (s) => showSimStatus(s) });
-  runtime = createLabRuntime({
-    template, byMarker, mapping: eventMap,
-    client, logEvent,                       // db.js logEvent, unchanged
-    uuid: () => crypto.randomUUID(),
-    onRender: (state) => vr.applySimState(state),   // new: see 5
-  });
-  runtime.start({ lab });
-}
-
-// Vision: one call per processed camera frame, no rendering involved.
-import { createVision } from '../../eduminds-integration/src/vision.js';
-import { AR } from 'js-aruco2';                    // the library the vision prototype already uses
-
-const vision = createVision({ Detector: AR.Detector });
-const detectCanvas = document.createElement('canvas');     // 640x360, downscaled
-const detectCtx = detectCanvas.getContext('2d', { willReadFrequently: true });
-
 export function onCameraFrame(video) {
   detectCtx.drawImage(video, 0, 0, detectCanvas.width, detectCanvas.height);
   const image = detectCtx.getImageData(0, 0, detectCanvas.width, detectCanvas.height);
   const { mat, frame } = vision.frameFromImage(image);
-  if (!mat.found) { showMatHint('show the four corner markers'); return; }
-  runtime?.place([frame]);          // push this frame's sightings into the 3-of-5 debounce
-}
-
-// Call this from the vision module for every processed camera frame.
-export function onMarkerFrames(frames) {
-  runtime?.place(frames);                   // frames = [[{markerId,x,y,theta_deg}, ...], ...]
-}
-
-// In the client that receives the simulation result (poll or callback):
-export function onSimResult(result) { runtime?.apply(result); }
-```
-
-`frames` is the vision module's output: one array per processed frame, each
-entry a detected token with normalized mat coordinates and rotation in degrees.
-The runtime does the debounce, the slot matching, the netlist build and the
-event mapping. Nothing else in `main.js` changes.
-
-## 4. `stopLab`
-
-```js
-export async function stopLab(lab) {
-  await runtime?.end();       // stops the client, keeps the last result for the next lab
-  runtime = null; client = null;
-  endSession();               // the existing DB call
+  if (!mat.found) {
+    runtime?.place([]); // age old marker sightings out during mat loss
+    showMatHint('show the four corner markers');
+    return;
+  }
+  runtime?.place([frame]); // one call per processed frame; runtime owns history
 }
 ```
 
-## 5. Render the result
+The rolling history is five frames; a token must be present in at least three.
+Do not call `stabilize([frame])` separately in the camera callback. If the mat
+is absent, keep calling `place([])` so stale tokens disappear after the
+stabilization window.
 
-`vr.js` gains one method; the integration only hands it a plain object:
+## 5. Result handling
 
-```js
-applySimState({ components, messages, scenarioCheck, stale, error }) {
-  if (error) return console.warn('[sim]', error);
-  const led = components?.LED1;
-  lamp.visible = Boolean(led && led.state === 'on');
-  lamp.material.opacity = led?.brightness ?? 0;
-  burnedBadge.visible = led?.state === 'burned';
-  hintPanel.text = (messages ?? []).map((m) => m.text).join('\n');
-  doneBadge.visible = Boolean(scenarioCheck?.completed);
-  staleBadge.visible = Boolean(stale);
-}
-```
+Feed every simulator result to `runtime.apply(result)`. The runtime emits
+throttled `sim_result` diagnostic snapshots and normal non-financial events.
+Browser clients do not submit `failure_caused` events: those must come from a
+trusted server-side verifier, or the database rejects them by policy.
 
-## 6. `takeComponent` and the toolbox
+## 6. Service exposure
 
-With physical tokens the toolbox is no longer how a part enters the circuit, so
-`takeComponent` should stop being a simulation hook. Keep it logging
-`component_taken` only if the toolbox stays visible; otherwise display the
-detected inventory instead. Decide once — the current hook fires on every gaze
-dwell and would double-count parts.
+The API binds to `127.0.0.1` by default. Keep it local for development. Never
+expose the Vite dev server or simulator directly to the public internet. For a
+tunnel, place an authenticated access proxy in front of the service and inject
+`EDUMINDS_API_TOKEN` from that trusted proxy. Never embed that token in
+browser code. Configure `EDUMINDS_ALLOWED_ORIGINS` only when cross-origin
+requests are explicitly required.
+
+## 7. Stop the lab
+
+Call `await runtime.end()`, clear the runtime/client references, and close the
+existing database session using the app's session lifecycle.
