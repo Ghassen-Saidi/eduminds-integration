@@ -3,7 +3,7 @@
 ## Once, the day before
 
 1. `npm install` in this repo and in `edu-minds-app`.
-2. Print `assets/print/mat-tp1.png` on **A4 landscape, 100 % scale, no fit-to-page**, on matte paper, and `assets/print/tokens.png` on thick paper; glue the tokens to card so they lie flat.
+2. Print `assets/print/mat-tp1.png` on **A3 landscape, 100 % scale, no fit-to-page**, on matte paper, and `assets/print/tokens.png` on A4 thick paper; glue the tokens to card so they lie flat. The mat is A3 because four 45 mm tokens do not fit an A4 sheet beside four 60 mm corner markers.
 3. Check the print: run `npm test` — the marker tests decode the very files you printed.
 4. Laptop and phone on the same Wi-Fi. Note the laptop's LAN IP.
 

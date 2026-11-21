@@ -59,6 +59,22 @@ export function startSim(lab) {
   runtime.start({ lab });
 }
 
+// Vision: one call per processed camera frame, no rendering involved.
+import { createVision } from '../../eduminds-integration/src/vision.js';
+import { AR } from 'js-aruco2';                    // the library the vision prototype already uses
+
+const vision = createVision({ Detector: AR.Detector });
+const detectCanvas = document.createElement('canvas');     // 640x360, downscaled
+const detectCtx = detectCanvas.getContext('2d', { willReadFrequently: true });
+
+export function onCameraFrame(video) {
+  detectCtx.drawImage(video, 0, 0, detectCanvas.width, detectCanvas.height);
+  const image = detectCtx.getImageData(0, 0, detectCanvas.width, detectCanvas.height);
+  const { mat, frame } = vision.frameFromImage(image);
+  if (!mat.found) { showMatHint('show the four corner markers'); return; }
+  runtime?.place([frame]);          // push this frame's sightings into the 3-of-5 debounce
+}
+
 // Call this from the vision module for every processed camera frame.
 export function onMarkerFrames(frames) {
   runtime?.place(frames);                   // frames = [[{markerId,x,y,theta_deg}, ...], ...]

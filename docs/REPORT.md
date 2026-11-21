@@ -24,14 +24,15 @@ are in Ghassen's Drive and regenerate with `npm run print`.
 | HTTP service over the unchanged engine | `services/sim/api.py` | done, stdlib only |
 | Engine packaging fixed | `services/sim/eduminds/` | done (was `edumind_simu` with `eduminds` imports) |
 | Printable token sheet and two mats, corners 100–103 | `assets/print/` | generated and decoded |
-| Tests | `tests/`, `services/sim/tests/` | 56 Node + 65 Python |
+| Vision adapter: detection → mat pose → token frames | `src/vision.js` | done, tested on composed frames |
+| Tests | `tests/`, `services/sim/tests/` | 67 Node + 65 Python |
 | CI | `.github/workflows/ci.yml` | done |
 | Supabase migration + SQL checks | `supabase/` | written, **not applied** |
 | App wiring instructions | `docs/APP_WIRING.md` | written, **not merged** |
 
 ## 2. Verified here (with the command that proves it)
 
-`npm run test:all` → 121 tests, 0 failures.
+`npm run test:all` → 132 tests, 0 failures.
 
 1. **The engine runs as shipped in this repo** — `npm run test:sim` runs the 57
    original Team 3 tests. As downloaded it could not run at all: the package
@@ -78,30 +79,52 @@ are in Ghassen's Drive and regenerate with `npm run print`.
     good result survives a reload; `stop()` sends nothing.
 12. **Perception debounce** — a marker must appear in 3 of the last 5 frames; a
     one-frame blip changes nothing in the netlist; mat corners are never parts.
+13. **Vision works on real images, not just fixtures** — `tests/vision.test.js`
+    composes the printed mat with printed tokens at known positions, runs the
+    real ArUco detector, solves the mat homography and projects each token to
+    mat coordinates: four sightings within 2 % of the slot centres, a token
+    turned 180° reported as flipped, a covered corner meaning "no mat, no
+    frames", a token off the board quad dropped, and corners never emitted as
+    parts.
+14. **A photograph reaches the database** — `tests/e2eVision.test.js` goes from
+    composed camera frame → frames → slots → netlist → real engine → events:
+    330 Ω lights the LED and completes the exercise, 220 Ω burns it and produces
+    exactly one `failure_caused`, a reversed LED produces `LED_REVERSED` rather
+    than a burn, and a board shifted 40 px still maps to the same slots.
 
-## 3. A finding that corrects the earlier plan
+## 3. Two findings that corrected the earlier plan
 
-The plan said "removing the resistor token burns the LED". It does not: with
-guided slots an empty slot is an **open circuit**, so the LED goes dark and the
-engine reports `MISSING_COMPONENT` — verified in `tp1_missing_r`. The burn case
-is the wrong value (220 Ω), which is what the demo should show. Teaching "no
-resistor = burnt LED" needs either free placement (the engine already supports
-it) or a 0 Ω jumper token in the resistor slot; neither is built.
+**The resistor.** The plan said "removing the resistor token burns the LED". It
+does not: with guided slots an empty slot is an **open circuit**, so the LED
+goes dark and the engine reports `MISSING_COMPONENT` — verified in
+`tp1_missing_r`. The burn case is the wrong value (220 Ω), which is what the
+demo should show. Teaching "no resistor = burnt LED" needs either free placement
+(the engine already supports it) or a 0 Ω jumper token in the resistor slot;
+neither is built.
+
+**The paper size.** An A4 sheet cannot hold four 45 mm tokens *and* four 60 mm
+corner markers: the clear band inside the corner markers is only 161 × 74 mm,
+and a token placed in the old layout physically covered the top-left corner,
+which made the whole mat undetectable (this is how the bug was found — the
+vision test failed with `mat.found: false` until the layout changed). The mat is
+now **A3 landscape (420 × 297 mm)**: same 60 mm corners, same 45 mm tokens, all
+four slots clear of the markers. The A4 variant is only viable with smaller
+corner markers or 35 mm tokens.
 
 ## 4. Leftover work, in the order it blocks the demo
 
 | # | Item | Why it is still open | Effort |
 |---|---|---|---|
-| 1 | **Vision must emit frames.** `onMarkerFrames([[{markerId,x,y,theta_deg}]])` in normalized mat coordinates. Today the archived detector draws on a canvas and exports nothing, and the phase-3 build with homography is not in the Drive folder. | needs the vision team or a 120-line rebuild from the mat geometry | 1–2 d |
+| 1 | **Wire `src/vision.js` to the app's camera.** The adapter exists and is tested on composed frames; it still has to be fed real frames from the `<video>` element (a small `drawImage` → `frameFromImage` loop in the app) and its output passed to `onMarkerFrames`. | their repo, ~30 lines; the hard part (detection, homography, coordinates) is done | 0.5 d |
 | 2 | **Apply the six app edits** (`docs/APP_WIRING.md`): proxy, lab registry, one runtime per lab, stopLab, `vr.applySimState`, takeComponent decision. | their repo, their merge | 0.5 d |
 | 3 | **Supabase**: apply `supabase/migrations/0002_sim_state.sql`, run `supabase/tests/checks.sql`, confirm anonymous sign-ins are enabled. | no Supabase access from here (the connector is not enabled for this agent) | 0.5 d |
 | 4 | **Phone + browser rehearsal**: the page on a real phone, real mat, real tokens; then the fake-camera Playwright run in CI (`--use-file-for-fake-video-capture`) for regression. | no camera, no browser stack and no physical mat here | 1 d |
 | 5 | **TP2** (divider + 3.3 V sensor): the engine has no analog 3.3 V sensor type; needs `sensor_3v3` + `ex4_divider_sensor` + template + tokens. | nobody owns it | 1 d |
-| 6 | **Print and mount** `assets/print/*.png` on A4 landscape at 100 %; the files are verified but not physical yet. | printer | 0.5 h |
+| 6 | **Print and mount** `assets/print/*.png` — mats on **A3 landscape**, tokens on A4, both at 100 %; the files are verified but not physical yet. | printer | 0.5 h |
 | 7 | **Teacher dashboard UI** — still only SQL views. | out of this prototype | 2–3 d |
 | 8 | **Component photos** for the toolbox (`public/components/` is empty). | cosmetic once tokens are physical | 0.5 d |
 | 9 | **A private GitHub repo.** `gsk github` can read repos and manage issues but has no create-repo action, and `gh` is not authenticated here, so this work is in the private Genspark git repo `eduminds-integration` instead. Point me at an empty GitHub repo and I will push it there. | needs a repo or a token | 5 min |
-| 10 | **Detection budget.** The demo video's HUD reads 79 ms per ArUco frame at 720p; downscaling to 640×360 and every second frame is specified but not implemented (vision side). | vision team | 0.5 d |
+| 10 | **Detection budget on the phone.** The demo video's HUD reads 79 ms per ArUco frame at 720p; downscaling to 640×360 and every second frame is specified but not implemented (vision side). | vision team | 0.5 d |
 
 ## 5. What I could not verify, stated plainly
 
