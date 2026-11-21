@@ -2,7 +2,7 @@
 -- On a disposable database after migrations 0001, 0002 and 0003.
 -- This file is not a production migration and all fixture data is rolled back.
 
-\\set ON_ERROR_STOP on
+\set ON_ERROR_STOP on
 begin;
 
 insert into auth.users (id) values ('00000000-0000-4000-8000-000000000001') on conflict do nothing;

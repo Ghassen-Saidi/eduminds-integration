@@ -19,7 +19,6 @@ function runtime({ nowMs = () => 10000 } = {}) {
     logEvent: (type, opts) => logged.push({ type, ...opts }),
     uuid: (() => { let n = 0; return () => `u${++n}`; })(),
     now: () => 'T', nowMs, onRender: (r) => rendered.push(r),
-    snapshotThrottleMs: 0,
   });
   return { rt, sent, logged, rendered };
 }
