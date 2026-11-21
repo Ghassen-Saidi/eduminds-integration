@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "labs": [
+    {
+      "id": 1,
+      "code": "led_resistor",
+      "scenario": "ex1_led_series",
+      "title_fr": "TP 1 · LED + résistance",
+      "sub_fr": "Loi d’Ohm : la LED brûle sans résistance",
+      "template": "tp1_slots.json"
+    },
+    {
+      "id": 3,
+      "code": "diode_buzzer",
+      "scenario": "ex2_diode_buzzer",
+      "title_fr": "TP 3 · Diode + buzzer",
+      "sub_fr": "Une diode de protection : le sens compte",
+      "template": "tp3_slots.json"
+    }
+  ]
+}

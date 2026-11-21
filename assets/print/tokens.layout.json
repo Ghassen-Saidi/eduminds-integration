@@ -1,0 +1,89 @@
+{
+  "sheet": {
+    "w": 1980,
+    "h": 1400
+  },
+  "dictionary": "ARUCO_MIP_36h12",
+  "tokens": [
+    {
+      "markerId": 1,
+      "ref": "CMP063",
+      "name": "Pile 9 V",
+      "x": 48,
+      "y": 250,
+      "size": 300
+    },
+    {
+      "markerId": 2,
+      "ref": "CMP059",
+      "name": "Alimentation DC de laboratoire 12 V",
+      "x": 444,
+      "y": 250,
+      "size": 300
+    },
+    {
+      "markerId": 4,
+      "ref": "CMP018",
+      "name": "LED rouge",
+      "x": 840,
+      "y": 250,
+      "size": 300
+    },
+    {
+      "markerId": 5,
+      "ref": "CMP024",
+      "name": "Diode de redressement",
+      "x": 1236,
+      "y": 250,
+      "size": 300
+    },
+    {
+      "markerId": 6,
+      "ref": "CMP045",
+      "name": "Buzzer",
+      "x": 1632,
+      "y": 250,
+      "size": 300
+    },
+    {
+      "markerId": 7,
+      "ref": "CMP038",
+      "name": "Interrupteur à bascule (ouvert)",
+      "x": 48,
+      "y": 630,
+      "size": 300
+    },
+    {
+      "markerId": 8,
+      "ref": "CMP038",
+      "name": "Interrupteur à bascule (fermé)",
+      "x": 444,
+      "y": 630,
+      "size": 300
+    },
+    {
+      "markerId": 21,
+      "ref": "CMP003",
+      "name": "Résistance 220 Ω",
+      "x": 840,
+      "y": 630,
+      "size": 300
+    },
+    {
+      "markerId": 22,
+      "ref": "CMP005",
+      "name": "Résistance 1 kΩ",
+      "x": 1236,
+      "y": 630,
+      "size": 300
+    },
+    {
+      "markerId": 23,
+      "ref": "CMP004",
+      "name": "Résistance 330 Ω",
+      "x": 1632,
+      "y": 630,
+      "size": 300
+    }
+  ]
+}

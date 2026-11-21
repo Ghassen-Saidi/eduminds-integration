@@ -1,0 +1,11 @@
+ref;nom;categorie;prix_tnd;prix_source;tp1;tp2;tp3;photo;sim_type;params;marker_id;token;polarized
+CMP063;Pile 9 V;Alimentation et protection;36,86;pdf;yes;no;no;no;battery;{"voltage":9.0};1;yes;yes
+CMP059;Alimentation DC de laboratoire 12 V;Alimentation et protection;429,49;pdf;no;no;yes;no;battery;{"voltage":12.0};2;yes;yes
+CMP018;LED rouge;Semi-conducteurs;0,5;pdf;yes;no;no;no;led;{"color":"red","forward_voltage":2.0,"max_current":0.03};4;yes;yes
+CMP024;Diode de redressement;Semi-conducteurs;4,13;pdf;no;no;yes;no;diode;{"forward_voltage":0.7,"max_current":1.0};5;yes;yes
+CMP045;Buzzer;Actionneurs;6,14;pdf;no;no;yes;no;buzzer;{"rated_voltage":12.0,"equivalent_resistance":400,"min_voltage":3.0};6;yes;yes
+CMP038;Interrupteur à bascule (ouvert);Interrupteurs et relais;18,51;pdf;yes;no;no;no;switch;{"closed":false};7;yes;no
+CMP038;Interrupteur à bascule (fermé);Interrupteurs et relais;18,51;pdf;yes;no;no;no;switch;{"closed":true};8;yes;no
+CMP003;Résistance 220 Ω;Composants passifs;0,1;estime;yes;no;no;no;resistor;{"resistance":220,"power_rating_w":0.25};21;yes;no
+CMP005;Résistance 1 kΩ;Composants passifs;0,1;estime;yes;yes;no;no;resistor;{"resistance":1000,"power_rating_w":0.25};22;yes;no
+CMP004;Résistance 330 Ω;Composants passifs;0,1;estime;no;no;no;no;resistor;{"resistance":330,"power_rating_w":0.25};23;yes;no

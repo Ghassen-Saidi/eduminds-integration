@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "scenario": "ex2_diode_buzzer",
+  "mat": { "w_mm": 297, "h_mm": 210 },
+  "fixed": [
+    { "id": "GND1", "type": "ground", "params": {} }
+  ],
+  "slots": [
+    { "instance": "BAT1",    "accepts": ["CMP059"], "x": 0.20, "y": 0.30, "theta_deg": 0 },
+    { "instance": "SW1",     "accepts": ["CMP038"], "x": 0.50, "y": 0.30, "theta_deg": 0 },
+    { "instance": "D1",      "accepts": ["CMP024"], "x": 0.50, "y": 0.64, "theta_deg": 0 },
+    { "instance": "BUZZER1", "accepts": ["CMP045"], "x": 0.80, "y": 0.64, "theta_deg": 0 }
+  ],
+  "nets": [
+    { "id": "N1",  "connections": ["BAT1.pos", "SW1.a"] },
+    { "id": "N2",  "connections": ["SW1.b", "D1.cathode", "BUZZER1.pos"] },
+    { "id": "GND", "connections": ["D1.anode", "BUZZER1.neg", "BAT1.neg", "GND1.gnd"] }
+  ],
+  "tolerance": { "pos_mm": 18, "theta_deg": 30 }
+}

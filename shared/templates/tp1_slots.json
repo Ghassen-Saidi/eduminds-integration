@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "scenario": "ex1_led_series",
+  "mat": {
+    "w_mm": 297,
+    "h_mm": 210
+  },
+  "fixed": [
+    {
+      "id": "GND1",
+      "type": "ground",
+      "params": {}
+    }
+  ],
+  "slots": [
+    {
+      "instance": "BAT1",
+      "accepts": [
+        "CMP063"
+      ],
+      "x": 0.18,
+      "y": 0.34,
+      "theta_deg": 0
+    },
+    {
+      "instance": "R1",
+      "accepts": [
+        "CMP003",
+        "CMP004",
+        "CMP005"
+      ],
+      "x": 0.52,
+      "y": 0.22,
+      "theta_deg": 0
+    },
+    {
+      "instance": "LED1",
+      "accepts": [
+        "CMP018"
+      ],
+      "x": 0.52,
+      "y": 0.62,
+      "theta_deg": 0
+    },
+    {
+      "instance": "SW1",
+      "accepts": [
+        "CMP038"
+      ],
+      "x": 0.84,
+      "y": 0.62,
+      "theta_deg": 0
+    }
+  ],
+  "nets": [
+    {
+      "id": "N1",
+      "connections": [
+        "BAT1.pos",
+        "R1.a"
+      ]
+    },
+    {
+      "id": "N2",
+      "connections": [
+        "R1.b",
+        "LED1.anode"
+      ]
+    },
+    {
+      "id": "GND",
+      "connections": [
+        "LED1.cathode",
+        "SW1.b",
+        "GND1.gnd"
+      ]
+    },
+    {
+      "id": "N3",
+      "connections": [
+        "SW1.a",
+        "BAT1.neg"
+      ]
+    }
+  ],
+  "tolerance": {
+    "pos_mm": 18,
+    "theta_deg": 30
+  }
+}
