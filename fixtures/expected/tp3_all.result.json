@@ -1,0 +1,43 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex2_diode_buzzer",
+  "status": "ok",
+  "messages": [],
+  "nodes": {
+    "N1": 12,
+    "N2": 11.99997,
+    "GND": 0
+  },
+  "components": {
+    "GND1": {
+      "state": "ok"
+    },
+    "BAT1": {
+      "voltage_v": 12,
+      "current_a": 0.029999925,
+      "state": "ok"
+    },
+    "SW1": {
+      "voltage_v": 0.00003,
+      "current_a": 0.029999925,
+      "state": "closed"
+    },
+    "D1": {
+      "voltage_v": -11.99997,
+      "current_a": 0,
+      "state": "reverse_blocking"
+    },
+    "BUZZER1": {
+      "voltage_v": 11.99997,
+      "current_a": 0.029999925,
+      "state": "sounding"
+    }
+  },
+  "scenario_check": {
+    "built_correctly": true,
+    "goal_reached": true,
+    "completed": true,
+    "missing": [],
+    "extra": []
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex3_ultrasonic_lcd",
+  "domain": "digital",
+  "status": "Not solvable by MNA. Needs Arduino/sensor/LCD simulation. Pin numbers are PROPOSED (not readable in the PDF).",
+  "components": [
+    { "id": "UNO1", "type": "arduino_uno", "params": { "sketch": "read HC-SR04, show cm and inch on LCD" } },
+    { "id": "US1",  "type": "hc_sr04",     "params": { "distance_cm": 216 } },
+    { "id": "LCD1", "type": "lcd_16x2",    "params": { "mode": "4-bit" } },
+    { "id": "R1",   "type": "resistor",    "params": { "resistance": 220, "role": "LCD backlight" } }
+  ],
+  "nets": [
+    { "id": "5V",    "connections": ["UNO1.5V", "US1.VCC", "LCD1.VDD", "R1.a"] },
+    { "id": "BL",    "connections": ["R1.b", "LCD1.A"] },
+    { "id": "GND",   "connections": ["UNO1.GND", "US1.GND", "LCD1.VSS", "LCD1.RW", "LCD1.V0", "LCD1.K"] },
+    { "id": "TRIG",  "connections": ["UNO1.D9", "US1.TRIG"] },
+    { "id": "ECHO",  "connections": ["UNO1.D10", "US1.ECHO"] },
+    { "id": "LCD_RS","connections": ["UNO1.D12", "LCD1.RS"] },
+    { "id": "LCD_E", "connections": ["UNO1.D11", "LCD1.E"] },
+    { "id": "LCD_D4","connections": ["UNO1.D5", "LCD1.D4"] },
+    { "id": "LCD_D5","connections": ["UNO1.D4", "LCD1.D5"] },
+    { "id": "LCD_D6","connections": ["UNO1.D3", "LCD1.D6"] },
+    { "id": "LCD_D7","connections": ["UNO1.D2", "LCD1.D7"] }
+  ],
+  "expected": { "lcd_line1": "Distance: 216 cm", "lcd_line2": "Distance: 85 in", "note": "PDF shows 84 in, but 216 cm = 85.04 in." }
+}

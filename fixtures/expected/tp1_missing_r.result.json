@@ -1,0 +1,60 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex1_led_series",
+  "status": "warning",
+  "messages": [
+    {
+      "code": "DANGLING_TERMINAL",
+      "severity": "info",
+      "component": "BAT1",
+      "text": "BAT1.pos is not connected to anything."
+    },
+    {
+      "code": "DANGLING_TERMINAL",
+      "severity": "info",
+      "component": "LED1",
+      "text": "LED1.anode is not connected to anything."
+    },
+    {
+      "code": "MISSING_COMPONENT",
+      "severity": "warning",
+      "component": "resistor",
+      "text": "A resistor is missing.",
+      "hint": "This exercise uses a battery, a switch, a resistor, an LED and ground."
+    }
+  ],
+  "nodes": {
+    "GND": 0,
+    "N3": 0
+  },
+  "components": {
+    "GND1": {
+      "state": "ok"
+    },
+    "BAT1": {
+      "voltage_v": 9,
+      "current_a": 0,
+      "state": "ok"
+    },
+    "LED1": {
+      "voltage_v": 0,
+      "current_a": 0,
+      "state": "off",
+      "brightness": 0
+    },
+    "SW1": {
+      "voltage_v": 0,
+      "current_a": 0,
+      "state": "closed"
+    }
+  },
+  "scenario_check": {
+    "built_correctly": false,
+    "goal_reached": false,
+    "completed": false,
+    "missing": [
+      "resistor"
+    ],
+    "extra": []
+  }
+}

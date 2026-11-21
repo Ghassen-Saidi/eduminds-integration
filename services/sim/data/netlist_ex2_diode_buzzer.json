@@ -1,0 +1,18 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex2_diode_buzzer",
+  "domain": "analog",
+  "components": [
+    { "id": "BAT1",    "type": "battery", "params": { "voltage": 12.0 } },
+    { "id": "SW1",     "type": "switch",  "params": { "closed": true } },
+    { "id": "D1",      "type": "diode",   "params": { "forward_voltage": 0.7, "max_current": 1.0 } },
+    { "id": "BUZZER1", "type": "buzzer",  "params": { "rated_voltage": 12.0, "equivalent_resistance": 400, "min_voltage": 3.0 } },
+    { "id": "GND1",    "type": "ground",  "params": {} }
+  ],
+  "nets": [
+    { "id": "N1",  "connections": ["BAT1.pos", "SW1.a"] },
+    { "id": "N2",  "connections": ["SW1.b", "D1.cathode", "BUZZER1.pos"] },
+    { "id": "GND", "connections": ["D1.anode", "BUZZER1.neg", "BAT1.neg", "GND1.gnd"] }
+  ],
+  "expected": { "buzzer_current_a": 0.030, "diode_state": "reverse_blocking", "buzzer_state": "sounding", "note": "D1 is reverse-biased (protection diode). If the student flips D1, it conducts across 12 V: SHORT_CIRCUIT. Orientation in the PDF is not readable; this is the standard orientation." }
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex2_diode_buzzer",
+  "domain": "analog",
+  "components": [
+    {
+      "id": "GND1",
+      "type": "ground",
+      "params": {}
+    },
+    {
+      "id": "BAT1",
+      "type": "battery",
+      "params": {
+        "voltage": 12
+      }
+    },
+    {
+      "id": "SW1",
+      "type": "switch",
+      "params": {
+        "closed": true
+      }
+    },
+    {
+      "id": "D1",
+      "type": "diode",
+      "params": {
+        "forward_voltage": 0.7,
+        "max_current": 1
+      }
+    },
+    {
+      "id": "BUZZER1",
+      "type": "buzzer",
+      "params": {
+        "rated_voltage": 12,
+        "equivalent_resistance": 400,
+        "min_voltage": 3
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "N1",
+      "connections": [
+        "BAT1.pos",
+        "SW1.a"
+      ]
+    },
+    {
+      "id": "N2",
+      "connections": [
+        "SW1.b",
+        "D1.cathode",
+        "BUZZER1.pos"
+      ]
+    },
+    {
+      "id": "GND",
+      "connections": [
+        "D1.anode",
+        "BUZZER1.neg",
+        "BAT1.neg",
+        "GND1.gnd"
+      ]
+    }
+  ]
+}

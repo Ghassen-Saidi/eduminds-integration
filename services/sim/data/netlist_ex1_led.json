@@ -1,0 +1,79 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex1_led_series",
+  "domain": "analog",
+  "components": [
+    {
+      "id": "BAT1",
+      "type": "battery",
+      "params": {
+        "voltage": 9.0
+      }
+    },
+    {
+      "id": "SW1",
+      "type": "switch",
+      "params": {
+        "closed": true
+      }
+    },
+    {
+      "id": "R1",
+      "type": "resistor",
+      "params": {
+        "resistance": 330,
+        "power_rating_w": 0.25
+      }
+    },
+    {
+      "id": "LED1",
+      "type": "led",
+      "params": {
+        "color": "red",
+        "forward_voltage": 2.0,
+        "max_current": 0.03
+      }
+    },
+    {
+      "id": "GND1",
+      "type": "ground",
+      "params": {}
+    }
+  ],
+  "nets": [
+    {
+      "id": "N1",
+      "connections": [
+        "BAT1.pos",
+        "R1.a"
+      ]
+    },
+    {
+      "id": "N2",
+      "connections": [
+        "R1.b",
+        "LED1.anode"
+      ]
+    },
+    {
+      "id": "GND",
+      "connections": [
+        "LED1.cathode",
+        "SW1.b",
+        "GND1.gnd"
+      ]
+    },
+    {
+      "id": "N3",
+      "connections": [
+        "SW1.a",
+        "BAT1.neg"
+      ]
+    }
+  ],
+  "expected": {
+    "led_current_a": 0.0212,
+    "led_state": "on",
+    "note": "I = (9 - 2) / 330. Values assumed, not given in the PDF."
+  }
+}
