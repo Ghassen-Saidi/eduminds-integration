@@ -1,0 +1,66 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex1_led_series",
+  "status": "warning",
+  "messages": [
+    {
+      "code": "DANGLING_TERMINAL",
+      "severity": "info",
+      "component": "GND1",
+      "text": "GND1.gnd is not connected to anything."
+    },
+    {
+      "code": "NO_SOURCE",
+      "severity": "warning",
+      "component": null,
+      "text": "There is no battery on the board, so no current can flow. Add a battery.",
+      "hint": "Every circuit needs a power source. Place the battery."
+    },
+    {
+      "code": "MISSING_COMPONENT",
+      "severity": "warning",
+      "component": "battery",
+      "text": "A battery is missing.",
+      "hint": "This exercise uses a battery, a switch, a resistor, an LED and ground."
+    },
+    {
+      "code": "MISSING_COMPONENT",
+      "severity": "warning",
+      "component": "led",
+      "text": "A led is missing.",
+      "hint": "This exercise uses a battery, a switch, a resistor, an LED and ground."
+    },
+    {
+      "code": "MISSING_COMPONENT",
+      "severity": "warning",
+      "component": "resistor",
+      "text": "A resistor is missing.",
+      "hint": "This exercise uses a battery, a switch, a resistor, an LED and ground."
+    },
+    {
+      "code": "MISSING_COMPONENT",
+      "severity": "warning",
+      "component": "switch",
+      "text": "A switch is missing.",
+      "hint": "This exercise uses a battery, a switch, a resistor, an LED and ground."
+    }
+  ],
+  "nodes": {},
+  "components": {
+    "GND1": {
+      "state": "off"
+    }
+  },
+  "scenario_check": {
+    "built_correctly": false,
+    "goal_reached": false,
+    "completed": false,
+    "missing": [
+      "battery",
+      "led",
+      "resistor",
+      "switch"
+    ],
+    "extra": []
+  }
+}

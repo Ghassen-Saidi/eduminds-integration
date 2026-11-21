@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex1_led_series",
+  "status": "ok",
+  "messages": [],
+  "nodes": {
+    "N1": 8.999978852,
+    "N2": 2.021147972,
+    "GND": 0,
+    "N3": -0.000021148
+  },
+  "components": {
+    "GND1": {
+      "state": "ok"
+    },
+    "BAT1": {
+      "voltage_v": 9,
+      "current_a": 0.021147972,
+      "state": "ok"
+    },
+    "R1": {
+      "voltage_v": 6.97883088,
+      "current_a": 0.021147972,
+      "power_w": 0.147588123,
+      "state": "ok"
+    },
+    "LED1": {
+      "voltage_v": 2.021147972,
+      "current_a": 0.021147972,
+      "state": "on",
+      "brightness": 1
+    },
+    "SW1": {
+      "voltage_v": -0.000021148,
+      "current_a": -0.021147972,
+      "state": "closed"
+    }
+  },
+  "scenario_check": {
+    "built_correctly": true,
+    "goal_reached": true,
+    "completed": true,
+    "missing": [],
+    "extra": []
+  }
+}

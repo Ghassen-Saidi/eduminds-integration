@@ -1,0 +1,136 @@
+{
+  "name": "tp3_all",
+  "template": "tp3_slots.json",
+  "frames": [
+    [
+      {
+        "markerId": 2,
+        "x": 0.2,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.5,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 5,
+        "x": 0.5,
+        "y": 0.64,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 6,
+        "x": 0.8,
+        "y": 0.64,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 2,
+        "x": 0.2,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.5,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 5,
+        "x": 0.5,
+        "y": 0.64,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 6,
+        "x": 0.8,
+        "y": 0.64,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 2,
+        "x": 0.2,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.5,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 5,
+        "x": 0.5,
+        "y": 0.64,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 6,
+        "x": 0.8,
+        "y": 0.64,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 2,
+        "x": 0.2,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.5,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 5,
+        "x": 0.5,
+        "y": 0.64,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 6,
+        "x": 0.8,
+        "y": 0.64,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 2,
+        "x": 0.2,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.5,
+        "y": 0.3,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 5,
+        "x": 0.5,
+        "y": 0.64,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 6,
+        "x": 0.8,
+        "y": 0.64,
+        "theta_deg": 0
+      }
+    ]
+  ]
+}

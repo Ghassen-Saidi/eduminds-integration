@@ -1,0 +1,61 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex1_led_series",
+  "status": "warning",
+  "messages": [
+    {
+      "code": "LED_REVERSED",
+      "severity": "warning",
+      "component": "LED1",
+      "text": "LED1 is the wrong way round and blocks the current. Flip it.",
+      "hint": "An LED only conducts one way. Turn it around so the anode faces the battery's + side."
+    },
+    {
+      "code": "WIRING_DIFFERS",
+      "severity": "warning",
+      "component": null,
+      "text": "All the parts are present but they are not connected as in the exercise.",
+      "hint": "All parts are there, but not in a single loop. Follow the current: battery, resistor, LED, ground, switch, back to the battery."
+    }
+  ],
+  "nodes": {
+    "N1": 9,
+    "N2": 8.999999994,
+    "GND": 0,
+    "N3": 0
+  },
+  "components": {
+    "GND1": {
+      "state": "ok"
+    },
+    "BAT1": {
+      "voltage_v": 9,
+      "current_a": 0,
+      "state": "ok"
+    },
+    "R1": {
+      "voltage_v": 6e-9,
+      "current_a": 0,
+      "power_w": 0,
+      "state": "ok"
+    },
+    "LED1": {
+      "voltage_v": -8.999999994,
+      "current_a": 0,
+      "state": "off",
+      "brightness": 0
+    },
+    "SW1": {
+      "voltage_v": 0,
+      "current_a": 0,
+      "state": "closed"
+    }
+  },
+  "scenario_check": {
+    "built_correctly": false,
+    "goal_reached": false,
+    "completed": false,
+    "missing": [],
+    "extra": []
+  }
+}

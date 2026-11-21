@@ -1,0 +1,54 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex1_led_series",
+  "status": "warning",
+  "messages": [
+    {
+      "code": "LED_OVERCURRENT",
+      "severity": "warning",
+      "component": "LED1",
+      "text": "LED1 receives 32 mA and is burned out. An LED needs a resistor in series.",
+      "hint": "Put the resistor in series between the battery and the LED so it limits the current."
+    }
+  ],
+  "nodes": {
+    "N1": 8.999968326,
+    "N2": 2.031674065,
+    "GND": 0,
+    "N3": -0.000031674
+  },
+  "components": {
+    "GND1": {
+      "state": "ok"
+    },
+    "BAT1": {
+      "voltage_v": 9,
+      "current_a": 0.031674065,
+      "state": "ok"
+    },
+    "R1": {
+      "voltage_v": 6.968294261,
+      "current_a": 0.031674065,
+      "power_w": 0.220714204,
+      "state": "ok"
+    },
+    "LED1": {
+      "voltage_v": 2.031674065,
+      "current_a": 0.031674065,
+      "state": "burned",
+      "brightness": 0
+    },
+    "SW1": {
+      "voltage_v": -0.000031674,
+      "current_a": -0.031674065,
+      "state": "closed"
+    }
+  },
+  "scenario_check": {
+    "built_correctly": true,
+    "goal_reached": false,
+    "completed": false,
+    "missing": [],
+    "extra": []
+  }
+}

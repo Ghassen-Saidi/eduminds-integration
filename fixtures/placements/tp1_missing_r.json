@@ -1,0 +1,106 @@
+{
+  "name": "tp1_missing_r",
+  "template": "tp1_slots.json",
+  "frames": [
+    [
+      {
+        "markerId": 1,
+        "x": 0.18,
+        "y": 0.34,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.84,
+        "y": 0.62,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 4,
+        "x": 0.52,
+        "y": 0.62,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 1,
+        "x": 0.18,
+        "y": 0.34,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.84,
+        "y": 0.62,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 4,
+        "x": 0.52,
+        "y": 0.62,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 1,
+        "x": 0.18,
+        "y": 0.34,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.84,
+        "y": 0.62,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 4,
+        "x": 0.52,
+        "y": 0.62,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 1,
+        "x": 0.18,
+        "y": 0.34,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.84,
+        "y": 0.62,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 4,
+        "x": 0.52,
+        "y": 0.62,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 1,
+        "x": 0.18,
+        "y": 0.34,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 8,
+        "x": 0.84,
+        "y": 0.62,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 4,
+        "x": 0.52,
+        "y": 0.62,
+        "theta_deg": 0
+      }
+    ]
+  ]
+}
