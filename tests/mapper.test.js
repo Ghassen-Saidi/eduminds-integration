@@ -7,12 +7,15 @@ import { path, readJson } from '../harness/chain.mjs';
 
 const byMarker = tokensByMarker(parseTokens(readFileSync(path('shared/components.csv'), 'utf8')));
 const tp1 = readJson('shared/templates/tp1_slots.json');
-const at = (slot, markerId, x, y, theta_deg = 0) => ({ markerId, x, y, theta_deg });
 const SLOT = Object.fromEntries(tp1.slots.map((s) => [s.instance, s]));
+const W = tp1.mat.w_mm, H = tp1.mat.h_mm;
+const at = (markerId, instance, { dx = 0, dy = 0, theta = 0 } = {}) => ({
+  markerId, x: SLOT[instance].x + dx / W, y: SLOT[instance].y + dy / H, theta_deg: theta,
+});
 
 test('a correct token in its slot becomes an instance with the slot name', () => {
   const { instances, rejected } = mapPlacements([
-    at('BAT1', 1, 0.18, 0.34), at('R1', 23, 0.52, 0.22), at('LED1', 4, 0.52, 0.62), at('SW1', 8, 0.84, 0.62),
+    at(1, 'BAT1'), at(23, 'R1'), at(4, 'LED1'), at(8, 'SW1'),
   ], tp1, byMarker);
   assert.deepEqual(rejected, []);
   assert.deepEqual(instances.map((i) => i.instance), ['BAT1', 'R1', 'LED1', 'SW1']);
@@ -21,36 +24,36 @@ test('a correct token in its slot becomes an instance with the slot name', () =>
 });
 
 test('a token in the wrong slot is rejected, never coerced', () => {
-  const { instances, rejected } = mapPlacements([at('R1', 4, 0.52, 0.22)], tp1, byMarker);
+  const { instances, rejected } = mapPlacements([at(4, 'R1')], tp1, byMarker);
   assert.equal(instances.length, 0);
   assert.equal(rejected[0].reason, 'wrong_component_for_slot');
   assert.equal(rejected[0].slot, 'R1');
 });
 
 test('position tolerance: 15 mm is accepted, 25 mm is not', () => {
-  const near = mapPlacements([at('R1', 23, 0.52 + 15 / 297, 0.22)], tp1, byMarker);
+  const near = mapPlacements([at(23, 'R1', { dx: 15 })], tp1, byMarker);
   assert.equal(near.instances.length, 1);
   assert.ok(near.instances[0].distanceMm <= 18);
-  const far = mapPlacements([at('R1', 23, 0.52 + 25 / 297, 0.22)], tp1, byMarker);
+  const far = mapPlacements([at(23, 'R1', { dx: 25 })], tp1, byMarker);
   assert.equal(far.instances.length, 0);
   assert.equal(far.rejected[0].reason, 'no_slot_in_range');
 });
 
 test('orientation decides polarity: 180 degrees flips, 15 does not', () => {
-  const flipped = mapPlacements([at('LED1', 4, 0.52, 0.62, 180)], tp1, byMarker);
+  const flipped = mapPlacements([at(4, 'LED1', { theta: 180 })], tp1, byMarker);
   assert.equal(flipped.instances[0].flipped, true);
-  const straight = mapPlacements([at('LED1', 4, 0.52, 0.62, 15)], tp1, byMarker);
+  const straight = mapPlacements([at(4, 'LED1', { theta: 15 })], tp1, byMarker);
   assert.equal(straight.instances[0].flipped, false);
 });
 
 test('a token off the mat is rejected', () => {
-  const { rejected } = mapPlacements([at('BAT1', 1, 1.4, 0.3)], tp1, byMarker);
+  const { rejected } = mapPlacements([{ markerId: 1, x: 1.4, y: 0.3, theta_deg: 0 }], tp1, byMarker);
   assert.equal(rejected[0].reason, 'off_mat');
 });
 
 test('two tokens in one slot: the closer one wins', () => {
   const { instances, rejected } = mapPlacements([
-    at('R1', 23, 0.528, 0.228), at('R1', 21, 0.515, 0.215),
+    at(23, 'R1', { dx: 2.5, dy: 1.7 }), at(21, 'R1', { dx: 1.0, dy: 1.0 }),
   ], tp1, byMarker);
   assert.equal(instances.length, 1);
   assert.equal(instances[0].ref, 'CMP003');           // the 220 ohm token, closer to the slot centre
@@ -59,6 +62,6 @@ test('two tokens in one slot: the closer one wins', () => {
 });
 
 test('an unknown marker id is reported, not mapped', () => {
-  const { rejected } = mapPlacements([at('BAT1', 55, 0.18, 0.34)], tp1, byMarker);
+  const { rejected } = mapPlacements([at(55, 'BAT1')], tp1, byMarker);
   assert.equal(rejected[0].reason, 'unknown_token');
 });
