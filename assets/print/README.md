@@ -21,3 +21,8 @@ used for this repository does not accept binary files):
 - `EduMinds tokens A4.png` — 10 tokens, 45 mm
 - `EduMinds mat TP1 A4.png` — corners 100–103, TP1 slot outlines
 - `EduMinds mat TP3 A4.png` — corners 100–103, TP3 slot outlines
+
+**Size matters:** the mats are A3 landscape (420 × 297 mm). On A4, the clear
+band inside four 60 mm corner markers is 161 × 74 mm — not enough for four
+45 mm tokens, and a token placed there covers a corner and makes the mat
+undetectable. The token sheet is A4.

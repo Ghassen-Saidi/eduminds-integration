@@ -19,17 +19,18 @@ runs `edu-minds-app`, and the simulator is still Team 3's engine, unmodified.
 | `src/validate.js` | client-side guard so a malformed netlist is never sent |
 | `src/events.js` | sim result → `events` rows that satisfy the DB constraints |
 | `src/simClient.js` | debounced client, offline/stale fallback, last-good result survives reload |
+| `src/vision.js` | camera frame → ArUco markers → mat homography → token frames in mat coordinates |
 | `src/appBridge.js` | the module the app imports: one lab runtime, frames in, render state out |
 | `services/sim/` | Team 3's engine (packaging fixed) + a stdlib HTTP service |
 | `assets/print/` | printable token sheet and the two mats (corners 100–103) |
-| `tests/` | 56 Node tests + 65 pytest tests |
+| `tests/` | 67 Node tests + 65 pytest tests (132) |
 
 ## Run it
 
 ```bash
 npm install                    # only for the printed-marker tests
 npm run test:sim               # 65 python tests (engine + HTTP contract)
-npm test                       # 56 node tests (mapper, builder, events, client, pipeline, markers)
+npm test                       # 67 node tests (vision, mapper, builder, events, client, pipeline, markers)
 npm run test:all               # both
 
 npm run sim                    # HTTP service on 127.0.0.1:8000
