@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .DS_Store
+/assets/print/mat-tp1.png
+/assets/print/mat-tp3.png
+/assets/print/tokens.png

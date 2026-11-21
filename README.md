@@ -30,7 +30,7 @@ runs `edu-minds-app`, and the simulator is still Team 3's engine, unmodified.
 ```bash
 npm install                    # only for the printed-marker tests
 npm run test:sim               # 65 python tests (engine + HTTP contract)
-npm test                       # 67 node tests (vision, mapper, builder, events, client, pipeline, markers)
+npm test                       # regenerate print PNGs, then run the 67 Node tests
 npm run test:all               # both
 
 npm run sim                    # HTTP service on 127.0.0.1:8000
