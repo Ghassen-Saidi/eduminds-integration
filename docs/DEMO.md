@@ -7,6 +7,25 @@
 3. Check the print: run `npm test` — the marker tests decode the very files you printed.
 4. Laptop and phone on the same Wi-Fi. Note the laptop's LAN IP.
 
+## Without the app: the demo page
+
+The repository has its own phone page, so the camera path can be tested before
+the app is touched:
+
+```bash
+npm run build:demo             # once: bundles the ArUco detector for the browser
+bash tools/make-cert.sh        # once: self-signed certificate for HTTPS
+npm run demo:tls               # https://<LAN-IP>:8443 — open it on the phone
+```
+
+Accept the certificate warning once, allow the camera, pick TP 1 and point the
+phone at the whole mat. The page shows the four corner quad, the slot rings,
+which parts it has placed, the lamp and the simulator's messages; a "sim
+offline" chip means the page is still usable with the last result. `npm run
+check:demo` proves the same path headlessly (3 composed frames → LED on at
+21.15 mA, exercise complete) so a broken network shows up before the phone
+does.
+
 ## Every run
 
 ```bash

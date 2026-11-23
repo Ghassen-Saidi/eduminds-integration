@@ -11,9 +11,14 @@
     "sim": "python3 services/sim/api.py --port 8000",
     "print": "node tools/make-tokens.cjs",
     "case": "node tools/run-case.mjs",
-    "freeze": "node tools/freeze.mjs"
+    "freeze": "node tools/freeze.mjs",
+    "demo": "python3 services/sim/api.py --port 8000 --demo",
+    "demo:tls": "python3 services/sim/api.py --port 8443 --demo --tls",
+    "build:demo": "esbuild demo/vendor/aruco-entry.js --bundle --format=iife --minify --outfile=demo/vendor/aruco.js",
+    "check:demo": "node tools/check-demo.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "js-aruco2": "^2.0.0",
     "sharp": "^0.35.5"
   }

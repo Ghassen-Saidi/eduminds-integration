@@ -1,25 +1,34 @@
 #!/usr/bin/env python3
 """HTTP face of the Team 3 engine, standard library only.
 
-    python3 api.py --port 8000
+    python3 api.py --port 8000                    # API only
+    python3 api.py --port 8000 --demo             # + the phone demo page on /
+    python3 api.py --port 8443 --demo --tls       # https (camera on a phone)
 
 Routes
     GET    /v1/health                      engine + scenario list
     POST   /v1/session   {scenario}        -> {session_id}
     POST   /v1/simulate  {session_id, netlist}
     DELETE /v1/session/<id>
+    GET    /                               the demo page (with --demo)
+    GET    /demo/..., /src/..., /shared/...  its static files (with --demo)
+
+Every route also answers under a /api prefix, so the page can use one origin and
+the app's Vite proxy rewrite (`/api` -> `/`) does the same thing in production.
 
 The session keeps the last good result, so a bad frame from vision produces a
 stale result instead of wiping the screen. No dependency beyond the engine.
 """
 import argparse
 import json
+import mimetypes
+import ssl
 import threading
 import time
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -31,6 +40,51 @@ MAX_BODY = 256 * 1024
 SESSION_TTL = 3600.0
 SESSIONS = {}
 LOCK = threading.Lock()
+
+REPO = Path(__file__).resolve().parents[2]
+# Static roots served only when --demo is on: URL prefix -> directory.
+STATIC_PREFIXES = {
+    "/demo/": REPO / "demo",
+    "/src/": REPO / "src",
+    "/shared/": REPO / "shared",
+}
+SERVE_DEMO = False
+
+MIME = {
+    ".html": "text/html; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+    ".mjs": "text/javascript; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".csv": "text/csv; charset=utf-8",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+    ".map": "application/json; charset=utf-8",
+}
+
+
+def strip_api_prefix(path):
+    """`/api/v1/simulate` is the same route as `/v1/simulate` (one origin, app proxy)."""
+    return path[4:] if path == "/api" or path.startswith("/api/") else path
+
+
+def static_file(path):
+    """Resolve a URL path under one of STATIC_PREFIXES; None if it is not ours."""
+    if not SERVE_DEMO:
+        return None
+    if path in ("/", "/index.html"):
+        return REPO / "demo" / "index.html"
+    for prefix, root in STATIC_PREFIXES.items():
+        if not path.startswith(prefix):
+            continue
+        rel = Path(unquote(path[len(prefix):]))
+        target = (root / rel).resolve()
+        try:
+            target.relative_to(root.resolve())
+        except ValueError:
+            return None                      # traversal attempt
+        return target if target.is_file() else None
+    return None
 
 
 def purge(now=None):
@@ -77,16 +131,29 @@ class Handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self._send(204, {})
 
+    def _file(self, target):
+        body = target.read_bytes()
+        self.send_response(200)
+        self.send_header("content-type", MIME.get(target.suffix, "application/octet-stream"))
+        self.send_header("content-length", str(len(body)))
+        self.send_header("cache-control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
-        if urlparse(self.path).path == "/v1/health":
+        path = strip_api_prefix(urlparse(self.path).path)
+        if path == "/v1/health":
             self._send(200, {"ok": True, "engine": "eduminds", "scenarios": sorted(load_scenarios().keys()),
-                             "sessions": len(SESSIONS)})
-        else:
-            self._error(404, "NOT_FOUND", "no such route")
+                             "sessions": len(SESSIONS), "demo": SERVE_DEMO})
+            return
+        target = static_file(path)
+        if target is not None:
+            return self._file(target)
+        self._error(404, "NOT_FOUND", "no such route")
 
     def do_POST(self):
         purge()
-        path = urlparse(self.path).path
+        path = strip_api_prefix(urlparse(self.path).path)
         body, err = self._body()
         if err:
             return self._error(400, "BAD_BODY", err)
@@ -124,7 +191,7 @@ class Handler(BaseHTTPRequestHandler):
         return self._error(404, "NOT_FOUND", "no such route")
 
     def do_DELETE(self):
-        path = urlparse(self.path).path
+        path = strip_api_prefix(urlparse(self.path).path)
         if path.startswith("/v1/session/"):
             sid = path.rsplit("/", 1)[-1]
             with LOCK:
@@ -138,13 +205,26 @@ def make_server(host="127.0.0.1", port=8000):
 
 
 def main():
+    global SERVE_DEMO
     ap = argparse.ArgumentParser()
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8000)
+    ap.add_argument("--demo", action="store_true", help="serve the phone demo page on / and its files")
+    ap.add_argument("--tls", action="store_true", help="wrap the socket in TLS (camera needs a secure context)")
+    ap.add_argument("--cert", default="certs/dev-cert.pem", help="TLS certificate (PEM)")
+    ap.add_argument("--key", default="certs/dev-key.pem", help="TLS private key (PEM)")
     args = ap.parse_args()
+    SERVE_DEMO = args.demo
     httpd = make_server(args.host, args.port)
-    print("EduMinds sim service on http://%s:%d  (scenarios: %s)"
-          % (args.host, args.port, ", ".join(sorted(load_scenarios()))), flush=True)
+    scheme = "http"
+    if args.tls:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain(args.cert, args.key)
+        httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
+        scheme = "https"
+    print("EduMinds sim service on %s://%s:%d  (scenarios: %s)%s"
+          % (scheme, args.host, args.port, ", ".join(sorted(load_scenarios())),
+             "  demo on /" if SERVE_DEMO else ""), flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
