@@ -37,6 +37,7 @@ def create_attestation(
     *,
     scenario: str,
     sim_session_id: str,
+    application_session_id: str,
     result: dict[str, Any],
     secret: str | None = None,
     issued_at: int | None = None,
@@ -76,6 +77,7 @@ def create_attestation(
         "run_id": str(run_id or uuid.uuid4()),
         "scenario": str(scenario),
         "sim_session_id": str(sim_session_id),
+        "application_session_id": str(application_session_id),
         "issued_at": int(time.time() if issued_at is None else issued_at),
         "failures": [failures[key] for key in sorted(failures, key=lambda item: (item[0], item[1] or ""))],
     }
