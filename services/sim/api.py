@@ -284,6 +284,7 @@ class Handler(BaseHTTPRequestHandler):
                     current_failures.add(key)
                     if key not in entry["active_failure_keys"]:
                         newly_seen_messages.append(message)
+                entry["active_failure_keys"].intersection_update(current_failures)
                 if newly_seen_messages:
                     attestation = create_attestation(
                         scenario=entry["scenario"],
@@ -295,10 +296,6 @@ class Handler(BaseHTTPRequestHandler):
                         result = dict(result)
                         result["attestation"] = attestation
                         entry["active_failure_keys"] = current_failures
-                else:
-                    # Age cleared failures out so a later recurrence can be
-                    # signed. If this result has no new failure messages, there
-                    # is nothing to retry on the next camera update.
             return self._send(200, result)
         return self._error(404, "NOT_FOUND", "no such route")
 
