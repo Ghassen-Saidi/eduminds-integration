@@ -158,3 +158,20 @@ test('stop aborts an active request and prevents a late result from being persis
   assert.equal(aborted, true);
   assert.equal(client.lastGood, null);
 });
+
+
+test('simulator session receives the owning database session id', async () => {
+  const fetchImpl = fakeFetch();
+  const client = createSimClient({
+    scenario: 'ex1_led_series',
+    applicationSessionId: '00000000-0000-4000-8000-000000000123',
+    fetchImpl,
+    debounceMs: 5,
+    storage: memoryStorage(),
+  });
+  client.update({ a: 1 });
+  await sleep(40);
+  const sessionCall = fetchImpl.calls.find((call) => call.url.endsWith('/v1/session'));
+  assert.equal(sessionCall.body.application_session_id, '00000000-0000-4000-8000-000000000123');
+  client.stop();
+});

@@ -9,10 +9,11 @@
 - Review migrations 0001–0003 and SQL assertions; these have not been applied to a live database.
 
 ## Still requires external access or physical testing
-- Identify the correct active Supabase project and inspect its real schema, migration history, Auth configuration, Data API exposure, logs and advisors.
-- Apply the migrations only after reconciling them with that live schema; the connected projects visible here are inactive.
-- Provide the student-app repository so its camera callback and database integration can be verified in context.
-- Implement a trusted server-side simulator verifier/event writer; browser clients intentionally cannot insert financial failure rows.
+- Re-authorize the Supabase MCP connection for the Healthy EduMinds project (ref `xxxscaqrfjxmsycbdebd`) and inspect its real schema, migration history, Auth configuration, Data API exposure, logs and advisors. The dashboard screenshot shows it Healthy, but the current MCP connection still returns permission denied.
+- Review and apply `0005_harden_student_writes.sql` only after confirming that migrations 0001–0004 match the live database.
+- Deploy `record-signed-sim-result` and configure the same high-entropy `EDUMINDS_ATTESTATION_SECRET` in the simulator and Edge Function secret stores.
+- Integrate the hardened data-layer adapter into the student-app repository; a ZIP snapshot is being reviewed, but GitHub access to the private `zieddhieb/edu-minds` repository is not currently available.
+- Run the PostgreSQL/RLS assertions in `supabase/tests/rls_hardening.sql` on a disposable database, then verify real student and teacher accounts before release.
 - Provision teacher-to-class assignments from a trusted administrative path and test with real teacher/student accounts.
 - Physically test a phone, printed A3 mat and tokens, camera permission, sensors, mat-loss and network recovery.
 - Test the service behind the intended authenticated tunnel/reverse proxy.

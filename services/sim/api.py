@@ -42,6 +42,7 @@ from urllib.parse import unquote, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from eduminds import Session, simulate  # noqa: E402
+from eduminds.attestation import create_attestation  # noqa: E402
 from eduminds.scenarios import load_scenarios  # noqa: E402
 
 MAX_BODY = 256 * 1024
@@ -230,10 +231,18 @@ class Handler(BaseHTTPRequestHandler):
             scenario = body.get("scenario") if isinstance(body, dict) else None
             if scenario not in load_scenarios():
                 return self._error(422, "UNKNOWN_SCENARIO", "unknown scenario %r" % (scenario,))
+            application_session_id = body.get("application_session_id") if isinstance(body, dict) else None
+            if application_session_id is not None:
+                try:
+                    application_session_id = str(uuid.UUID(str(application_session_id)))
+                except (ValueError, TypeError, AttributeError):
+                    return self._error(422, "INVALID_APPLICATION_SESSION", "application_session_id must be a UUID")
             sid = uuid.uuid4().hex
             with LOCK:
                 SESSIONS[sid] = {
                     "session": Session(scenario), "scenario": scenario,
+                    "application_session_id": application_session_id,
+                    "active_failure_keys": set(),
                     "touched": time.time(), "lock": threading.Lock(),
                 }
             return self._send(200, {"session_id": sid, "scenario": scenario})
@@ -258,6 +267,35 @@ class Handler(BaseHTTPRequestHandler):
                 # an untrusted browser client.
                 sys.stderr.write("simulator engine error: %r\n" % exc)
                 return self._error(500, "ENGINE_ERROR", "simulation failed")
+            if entry and entry.get("application_session_id") and not result.get("stale"):
+                # Count a continuous fault once. A candidate can be signed again
+                # only after it disappears from a fresh engine result and then
+                # returns. This is the trusted equivalent of the UI edge trigger.
+                current_failures = set()
+                newly_seen_messages = []
+                for message in result.get("messages", []):
+                    if not isinstance(message, dict) or message.get("code") not in {
+                        "LED_OVERCURRENT", "SHORT_CIRCUIT",
+                        "SHORT_CIRCUIT_CURRENT", "SENSOR_OVERVOLTAGE",
+                    }:
+                        continue
+                    component = message.get("component") or ""
+                    key = (message["code"], str(component))
+                    current_failures.add(key)
+                    if key not in entry["active_failure_keys"]:
+                        newly_seen_messages.append(message)
+                entry["active_failure_keys"].intersection_update(current_failures)
+                if newly_seen_messages:
+                    attestation = create_attestation(
+                        scenario=entry["scenario"],
+                        sim_session_id=sid,
+                        application_session_id=entry["application_session_id"],
+                        result={**result, "messages": newly_seen_messages},
+                    )
+                    if attestation:
+                        result = dict(result)
+                        result["attestation"] = attestation
+                        entry["active_failure_keys"] = current_failures
             return self._send(200, result)
         return self._error(404, "NOT_FOUND", "no such route")
 

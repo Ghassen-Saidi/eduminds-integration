@@ -8,6 +8,7 @@ const KEY = (scenario) => `edu_sim_last_${scenario}`;
 export function createSimClient({
   baseUrl = '/api', scenario, fetchImpl = globalThis.fetch,
   debounceMs = 350, timeoutMs = 1500, storage = safeStorage(), onStatus = () => {},
+  applicationSessionId = null,
 } = {}) {
   let timer = null;
   let pending = null;
@@ -47,7 +48,10 @@ export function createSimClient({
 
   async function ensureSession() {
     if (sessionId) return sessionId;
-    const { session_id } = await call('/v1/session', { scenario });
+    const { session_id } = await call('/v1/session', {
+      scenario,
+      ...(applicationSessionId ? { application_session_id: applicationSessionId } : {}),
+    });
     if (!session_id) throw new Error('sim service did not return a session_id');
     sessionId = session_id;
     return sessionId;
