@@ -11,7 +11,7 @@ import { mapResult } from './events.js';
 const FRAME_WINDOW = 5;
 
 export function createLabRuntime({
-  template, byMarker, mapping, client, logEvent, uuid,
+  template, byMarker, mapping, client, logEvent, submitAttestation = () => {}, uuid,
   now = () => new Date().toISOString(), nowMs = () => Date.now(),
   snapshotThrottleMs = 2000, onRender = () => {},
 }) {
@@ -89,6 +89,11 @@ export function createLabRuntime({
       lastResult = result;
       const fresh = Boolean(result) && !result.stale && !result.offline;
       const messages = Array.isArray(result?.messages) ? result.messages : [];
+      // Only a server-signed attestation is eligible for the trusted financial
+      // event path. Plain browser-derived failure messages remain untrusted.
+      if (fresh && active && sessionId && result?.attestation) {
+        submitAttestation(result.attestation);
+      }
       const currentFailureKeys = new Set(
         messages
           .filter((m) => mapping[m.code]?.event === 'failure_caused')
