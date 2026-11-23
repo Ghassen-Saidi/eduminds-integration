@@ -1,139 +1,126 @@
-# EduMinds integration — what is done, what is verified, what is left
+# EduMinds integration — diagnosis, state and what is left
 
-21 November 2026. This is the status of the integration work, written to be
-checked rather than believed: every claim below has a command next to it.
+**23 November 2026.** Written to be checked rather than believed: every claim
+has the command that proves it. Supersedes the 21 November report.
 
-**Where it lives:** the private git store repo `eduminds-integration`
-(read it with `gsk sb-git find -r eduminds-integration` / `gsk sb-git cat -r eduminds-integration -p <path>`).
-It could not go to GitHub: `gsk github` has no create-repo action and `gh` is not
-authenticated here. The print assets are PNGs, which that store refuses, so they
-are in Ghassen's Drive and regenerate with `npm run print`.
+**Where it lives:** GitHub, private repo `Ghassen-Saidi/eduminds-integration`.
+- `main` = `0917911` (21 Nov), untouched so far.
+- `integration/2026-11-23` = this work, PR #1 → `main`.
+- `feat/tp2-sensor-3v3` = TP 2, PR #2 → `integration/2026-11-23` (merge #1 first).
 
-## 1. Built in this repository
+## 1. Diagnosis — what was actually wrong
 
-| Piece | File | State |
-|---|---|---|
-| Lab ↔ scenario registry | `shared/labs.json` | done |
-| Token table (CMP → sim type/params/marker) | `shared/components.csv` | done, 10 demo tokens |
-| Exercise geometry (slots + authored wiring) | `shared/templates/tp1_slots.json`, `tp3_slots.json` | done |
-| Failure/hint mapping, total over the engine's codes | `shared/events.map.json` | done and tested |
-| Frame debounce, slot mapper, netlist builder, guard | `src/perception.js`, `mapper.js`, `netlist.js`, `validate.js` | done |
-| Sim result → `events` rows | `src/events.js` | done |
-| Debounced client with stale/offline fallback | `src/simClient.js` | done |
-| App-facing runtime (frames in, render state out) | `src/appBridge.js` | done |
-| HTTP service over the unchanged engine | `services/sim/api.py` | done, stdlib only |
-| Engine packaging fixed | `services/sim/eduminds/` | done (was `edumind_simu` with `eduminds` imports) |
-| Printable token sheet and two mats, corners 100–103 | `assets/print/` | generated and decoded |
-| Vision adapter: detection → mat pose → token frames | `src/vision.js` | done, tested on composed frames |
-| Tests | `tests/`, `services/sim/tests/` | 67 Node + 65 Python |
-| CI | `.github/workflows/ci.yml` | done |
-| Supabase migration + SQL checks | `supabase/` | written, **not applied** |
-| App wiring instructions | `docs/APP_WIRING.md` | written, **not merged** |
+The repository was not "one thing left to finish". Two branches had diverged
+from `main` and neither contained the other's work, and the status document no
+longer matched the repository.
 
-## 2. Verified here (with the command that proves it)
-
-`npm run test:all` → 132 tests, 0 failures.
-
-1. **The engine runs as shipped in this repo** — `npm run test:sim` runs the 57
-   original Team 3 tests. As downloaded it could not run at all: the package
-   folder was `edumind_simu`, every import and the CLI said `eduminds`, and
-   `pytest.ini` pointed at `tests/` while the folder was `test/`.
-2. **The HTTP service behaves** — 8 tests over real sockets: session creation,
-   unknown scenario → 422, bad body → 400, stateless fallback when a session is
-   unknown, delete idempotency, five sessions staying isolated under
-   interleaved good/bad input.
-3. **The stale rule works end to end** — valid → invalid → valid returns
-   `stale: true` with the previous components, then a fresh result. This is the
-   behaviour a dropped camera frame relies on.
-4. **Ten integration cases run through the real engine** — correct board, 220 Ω,
-   missing resistor, reversed LED, open switch, empty mat, one-frame blip, wrong
-   slot, crowded slot, TP3. No case produces an engine input-error code, which
-   is the failure mode that silently freezes the UI.
-5. **The correct board completes the exercise** — TP1 with 330 Ω: LED on,
-   brightness 1.0, 21.15 mA, `scenario_check.completed = true`, nothing logged.
-   TP3: buzzer sounding, diode reverse-blocking, completed. Note the switch sits
-   on the return path because the exercise grader compares topology, not just
-   connectivity: a switch on the positive side is electrically identical and
-   still scores `WIRING_DIFFERS`. The template was aligned to the target netlist
-   after seeing that.
-6. **The money path is exact** — 220 Ω → 31.67 mA → LED `burned` → exactly one
-   `failure_caused` row with `failure_code: "led_overcurrent"`, wired correctly
-   but goal missed. Reversed LED and missing parts produce hints, never money.
-7. **The event mapping is total** — a test reads the engine's own `TEXTS` table
-   in Python and fails if any code the engine can emit has no mapping. It caught
-   `UNKNOWN_TYPE` on the first run.
-8. **Event rows obey the database constraints** — `failure_caused` rows carry no
-   `component_ref` (the schema says `component_ref IS NOT NULL` only for
-   `component_taken`); the part reference travels in `payload`.
-9. **The printed artefacts actually decode** — `tests/markers.test.js` crops
-   every token and all four corners from the generated PNGs and decodes them
-   with the same detector settings the vision code uses (`ARUCO_MIP_36h12`,
-   max hamming 6). All 10 tokens and both mats return their ids; corners are
-   100–103 and no token reuses that range.
-10. **The builder cannot emit an unknown terminal** — a property test walks every
-    subset of filled slots and asserts the client guard accepts the result, and
-    that an empty slot leaves no terminal reference behind.
-11. **Client behaviour** — 10 updates in 60 ms send one request; one session is
-    reused; a dropped request returns the last good result without throwing; a
-    server-side `stale` answer does not overwrite the last good result; the last
-    good result survives a reload; `stop()` sends nothing.
-12. **Perception debounce** — a marker must appear in 3 of the last 5 frames; a
-    one-frame blip changes nothing in the netlist; mat corners are never parts.
-13. **Vision works on real images, not just fixtures** — `tests/vision.test.js`
-    composes the printed mat with printed tokens at known positions, runs the
-    real ArUco detector, solves the mat homography and projects each token to
-    mat coordinates: four sightings within 2 % of the slot centres, a token
-    turned 180° reported as flipped, a covered corner meaning "no mat, no
-    frames", a token off the board quad dropped, and corners never emitted as
-    parts.
-14. **A photograph reaches the database** — `tests/e2eVision.test.js` goes from
-    composed camera frame → frames → slots → netlist → real engine → events:
-    330 Ω lights the LED and completes the exercise, 220 Ω burns it and produces
-    exactly one `failure_caused`, a reversed LED produces `LED_REVERSED` rather
-    than a burn, and a board shifted 40 px still maps to the same slots.
-
-## 3. Two findings that corrected the earlier plan
-
-**The resistor.** The plan said "removing the resistor token burns the LED". It
-does not: with guided slots an empty slot is an **open circuit**, so the LED
-goes dark and the engine reports `MISSING_COMPONENT` — verified in
-`tp1_missing_r`. The burn case is the wrong value (220 Ω), which is what the
-demo should show. Teaching "no resistor = burnt LED" needs either free placement
-(the engine already supports it) or a 0 Ω jumper token in the resistor slot;
-neither is built.
-
-**The paper size.** An A4 sheet cannot hold four 45 mm tokens *and* four 60 mm
-corner markers: the clear band inside the corner markers is only 161 × 74 mm,
-and a token placed in the old layout physically covered the top-left corner,
-which made the whole mat undetectable (this is how the bug was found — the
-vision test failed with `mat.found: false` until the layout changed). The mat is
-now **A3 landscape (420 × 297 mm)**: same 60 mm corners, same 45 mm tokens, all
-four slots clear of the markers. The A4 variant is only viable with smaller
-corner markers or 35 mm tokens.
-
-## 4. Leftover work, in the order it blocks the demo
-
-| # | Item | Why it is still open | Effort |
+| # | Finding | Evidence | Fixed |
 |---|---|---|---|
-| 1 | **Wire `src/vision.js` to the app's camera.** The adapter exists and is tested on composed frames; it still has to be fed real frames from the `<video>` element (a small `drawImage` → `frameFromImage` loop in the app) and its output passed to `onMarkerFrames`. | their repo, ~30 lines; the hard part (detection, homography, coordinates) is done | 0.5 d |
-| 2 | **Apply the six app edits** (`docs/APP_WIRING.md`): proxy, lab registry, one runtime per lab, stopLab, `vr.applySimState`, takeComponent decision. | their repo, their merge | 0.5 d |
-| 3 | **Supabase**: apply `supabase/migrations/0002_sim_state.sql`, run `supabase/tests/checks.sql`, confirm anonymous sign-ins are enabled. | no Supabase access from here (the connector is not enabled for this agent) | 0.5 d |
-| 4 | **Phone + browser rehearsal**: the page on a real phone, real mat, real tokens; then the fake-camera Playwright run in CI (`--use-file-for-fake-video-capture`) for regression. | no camera, no browser stack and no physical mat here | 1 d |
-| 5 | **TP2** (divider + 3.3 V sensor): the engine has no analog 3.3 V sensor type; needs `sensor_3v3` + `ex4_divider_sensor` + template + tokens. | nobody owns it | 1 d |
-| 6 | **Print and mount** `assets/print/*.png` — mats on **A3 landscape**, tokens on A4, both at 100 %; the files are verified but not physical yet. | printer | 0.5 h |
-| 7 | **Teacher dashboard UI** — still only SQL views. | out of this prototype | 2–3 d |
-| 8 | **Component photos** for the toolbox (`public/components/` is empty). | cosmetic once tokens are physical | 0.5 d |
-| 9 | **A private GitHub repo.** `gsk github` can read repos and manage issues but has no create-repo action, and `gh` is not authenticated here, so this work is in the private Genspark git repo `eduminds-integration` instead. Point me at an empty GitHub repo and I will push it there. | needs a repo or a token | 5 min |
-| 10 | **Detection budget on the phone.** The demo video's HUD reads 79 ms per ArUco frame at 720p; downscaling to 640×360 and every second frame is specified but not implemented (vision side). | vision team | 0.5 d |
+| F1 | `feat/camera-demo` (camera loop, phone page) and `fix/integration-stability-2026-11-21` (single-flight client, bounded history, service hardening, migrations 0001/0003) both branch from `main` `0917911` and share no commit. Merging either alone silently drops the other. | `list_commits` on both branches: first commit after `0917911`; no common head | merged into `integration/2026-11-23` by hand over the conflicting files (`api.py`, `README`, `APP_WIRING`, `package.json`, `.gitignore`) |
+| F2 | CI was red on a clean checkout. The marker/vision tests read `assets/print/*.png`, which are generated (and gitignored), but CI ran `npm test` without generating them — 13 Node tests fail on a fresh clone. | fresh clone: `npm test` → 60/73 before `npm run print` | `pretest: npm run print` in `package.json`; CI unchanged and now green |
+| F3 | The wiring guide told the app to call `place([frame])` once per camera frame. `perception.stabilize` needs 3 sightings in the last 5 frames, so the board could never show anything. | `docs/APP_WIRING.md` (old §3) vs `src/perception.js` | camera loop hands over the rolling window; runtime also accepts single frames and ages the window on `place([])` |
+| F4 | With the runtime owning the window, nothing cleared the board when the mat left the camera: a stale board stayed forever. | runtime history code | demo page and wiring doc call `place([])` per missed detection — 3 misses clear, 1 bad frame does not |
+| F5 | `src/validate.js` had its own hardcoded component-type list; a new engine type would be rejected client-side before it was ever sent. | `TERMINAL_TYPES` in `src/validate.js` | list now includes `sensor_3v3` (and any future type must be added there — documented) |
+| F6 | **Design conflict, unresolved:** `0003_secure_telemetry.sql` correctly stops browser clients from inserting `failure_caused` (money) rows. But nothing replaces them, so the teacher screen's "0.50 TND saved" cannot come from a phone run. | migration `0003`, `appBridge.apply()` now skips financial rows | **decision needed**: build the trusted server-side verifier (the sim service already knows the result and could write it with a service-role key) or keep client rows for the prototype |
+| F7 | The six app edits still cannot be applied: `zieddhieb/edu-minds` returns 404 for the connected GitHub account — no collaborator access. | `get_file_contents(zieddhieb/edu-minds)` → 404 | unchanged; the `demo/` phone page covers the camera path without the app, and `docs/APP_WIRING.md` is ready for whoever has the repo |
+| F8 | `docs/REPORT.md` claimed 132 tests, said the work could not go to GitHub, and said Supabase was never applied. All three were stale. | this file | rewritten |
+| F9 | Telemetry schema state is ambiguous: `0001` was rebuilt after the original Supabase project was deleted; `0001`+`0002` were applied to `xxxscaqrfjxmsycbdebd` and verified (anon sign-in → rows → `failures_prevented` 0.50 TND); `0003`/`0004` are **not** applied. | my 21 Nov acceptance run; migrations in repo | stated plainly; nothing applied from this branch |
+
+Two findings from the earlier round still stand and are still true:
+removing the resistor gives an open circuit (`MISSING_COMPONENT`), not a burn —
+the burn case is the 220 Ω value; and an A4 mat cannot hold four 45 mm tokens
+beside four 60 mm corners, so the mat is A3 landscape.
+
+## 2. What was built in this round
+
+### Integration branch (PR #1)
+
+- Union of both branches, conflicts resolved in `services/sim/api.py` (demo
+  static routes + TLS + `/api` prefix **and** bearer token, per-IP rate limit,
+  CORS allowlist, session locks, strict body handling), `README.md`,
+  `docs/APP_WIRING.md`, `package.json`, `.gitignore`.
+- Merged wiring doc: one-origin proxy, lab registry, one runtime per lab,
+  camera loop contract (window **or** single frame + `place([])`), `stopLab`,
+  `applySimState`, `takeComponent`, and what the browser may write.
+- `docs/REMAINING_WORK.md` and `docs/SUPABASE_TESTS.md` from the stability work
+  are kept, with the verifier and live-DB items explicit.
+- Print assets regenerate before tests (`pretest`), CI runs `test:sim`,
+  `test`, `check:demo`.
+
+### TP 2 branch (PR #2) — divider + 3.3 V sensor
+
+Engine: `sensor_3v3` analog type (`pos`/`neg`, max 3.3 V, min 2.0 V, 100 kΩ
+input) stamped as a load, states `powered` / `underpowered` / `destroyed` /
+`reversed` with three new message codes, all mapped in `events.map.json`
+(`SENSOR_OVERVOLTAGE` is a `failure_caused` money event, the other two hints).
+Validation rejects non-positive limits.
+
+Scenario `ex4_divider_sensor`: 9 V battery → R1 → node → R2 → GND, sensor
+across R2; success = sensor `powered`. Template `tp2_slots.json` reuses the
+battery, the three resistor tokens and a new sensor token (CMP070, marker 24).
+Lab id 2 added to `shared/labs.json`; third A3 mat and the 11-token sheet are
+generated by `npm run print`; the demo page shows the sensor voltage;
+`check:demo` now drives TP1 **and** TP2.
+
+The arithmetic, exercised by the tests:
+
+| R1 | R2 | sensor | outcome |
+|---|---|---|---|
+| 1 kΩ | 330 Ω | 2.23 V | `powered`, exercise complete |
+| 1 kΩ | 220 Ω | 1.62 V | `underpowered` hint, no money |
+| 220 Ω | 330 Ω | 5.39 V | `destroyed`, one `sensor_overvoltage` event |
+| 1 kΩ | 1 kΩ | 4.48 V | `destroyed` |
+| 330 Ω | 220 Ω | 3.60 V | `destroyed` (just over 3.3 V) |
+
+Data: `supabase/migrations/0004_tp2_sensor.sql` adds lab 2, component CMP070
+(**price 12.50 TND estimated — confirm against the course catalogue**) and
+prices `sensor_overvoltage` for `failures_prevented`. Data only, not applied.
+
+## 3. Verification, on a fresh clone of each pushed branch
+
+```
+integration/2026-11-23 : npm ci && npm run test:all  -> 73 python + 77 node = 150, 0 failures
+                         npm run check:demo          -> LED on 21.15 mA, complete
+feat/tp2-sensor-3v3    : npm ci && npm run test:all  -> 81 python + 80 node = 161, 0 failures
+                         npm run check:demo          -> LED on 21.15 mA + sensor 2.23 V, both complete
+```
+
+`check:demo` starts the real service on a free port, composes camera frames from
+the printed mats and tokens, runs the real ArUco detector, the mapper, the
+netlist builder, the HTTP service and the engine, and asserts the exercise
+completes. Marker tests decode all 11 printed tokens and the three mats
+(corners 100–103) from the generated PNGs.
+
+Supabase, from the 21 Nov verification (not re-run today, nothing changed):
+anonymous sign-in on, anon user → student/session/events 201 under RLS,
+`failures_prevented` → CMP018 / 1 / 0.50 TND, test rows deleted. `0003`/`0004`
+are **not** applied, so the live project still allows client `failure_caused`
+rows — i.e. the demo's money panel still works, but not with the hardened
+policy.
+
+## 4. Still open, in the order that matters for 25 November
+
+| # | Item | Owner / blocker | Effort |
+|---|---|---|---|
+| 1 | Print the TP1 (and TP2) A3 mats at 100 %, cut the 11 tokens, mount them; run `npm test` after printing | printer + 30 min | 0.5 h |
+| 2 | Phone rehearsal of the demo page on the LAN with TLS: camera permission, mat detection at an angle, mat loss, network drop | a phone and a person | 2 h |
+| 3 | Decide F6 (trusted verifier vs client rows) and apply 0003 + 0004 accordingly | Ghassen + backend | 0.5–1 d |
+| 4 | Six app edits in `zieddhieb/edu-minds` (access needed) | repo access | 0.5 d |
+| 5 | Confirm CMP070 catalogue ref and price | course catalogue | 15 min |
+| 6 | Physical TP2 sensor token; verify the 3.3 V module really reads on the phone | after 1–2 | 0.5 h |
+| 7 | Teacher dashboard UI (SQL views only today) | out of this prototype | 2–3 d |
+| 8 | Component photos for the toolbox | cosmetic | 0.5 d |
 
 ## 5. What I could not verify, stated plainly
 
-- No camera, no phone, no headset: the camera path, the gyroscope, the stereo
-  render and the frame rate are unverified by me.
-- No browser: the Playwright/fake-camera test is specified in the plan but not
-  written or run here.
-- No Supabase: the migration and SQL checks are written but never executed.
-- The phase-3 vision source (mat homography, hand gestures, 68 tests) is still
-  absent from the Drive folder.
-- The printed artefacts decode from PNG; whether the paper print survives a
-  phone camera at an angle is a physical test.
+- No camera, no phone, no printer here: the camera path, the print at real
+  size, glare, the certificate on iOS Safari and the 90-second script are
+  unverified by me.
+- No access to the student app repository: the six edits are instructions, not
+  merged code.
+- `0003`/`0004` are not applied to any live database; the hardened policy and
+  the TP2 reference rows exist only as SQL.
+- The CMP070 ref and its 12.50 TND price are estimates.
+- The TP2 sensor model is a load with a voltage window, not a datasheet model
+  (no quiescent current, no analog reading conversion) — enough for the
+  divider lesson, not for sensor calibration.
