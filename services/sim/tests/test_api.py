@@ -120,3 +120,42 @@ def test_per_ip_rate_limit_has_a_sliding_window(monkeypatch):
     assert api.allow_request("unit-test-client", now=101.0) is True
     assert api.allow_request("unit-test-client", now=102.0) is False
     assert api.allow_request("unit-test-client", now=161.1) is True
+
+
+
+def test_non_loopback_bind_requires_a_bearer_token():
+    with pytest.raises(ValueError, match="EDUMINDS_API_TOKEN"):
+        api.validate_bind("0.0.0.0", api_token="")
+    api.validate_bind("127.0.0.1", api_token="")
+    api.validate_bind("::1", api_token="")
+    api.validate_bind("0.0.0.0", api_token="reverse-proxy-secret")
+
+
+def test_protected_requests_trigger_expiry_cleanup(monkeypatch):
+    purged = []
+    monkeypatch.setattr(api, "API_TOKEN", None)
+    monkeypatch.setattr(api, "purge", lambda: purged.append(True))
+    monkeypatch.setattr(api, "allow_request", lambda _ip: True)
+    handler = api.Handler.__new__(api.Handler)
+    handler.headers = {"Authorization": ""}
+    handler.client_address = ("198.51.100.4", 12345)
+    assert handler._access_error() is False
+    assert purged == [True]
+
+
+def test_engine_errors_do_not_leak_internal_exception_text(base_url):
+    sid = "unit-test-engine-error"
+    class BrokenSession:
+        def update(self, _netlist):
+            raise RuntimeError("sensitive-internal-detail")
+    api.SESSIONS[sid] = {
+        "session": BrokenSession(), "scenario": "ex1_led_series",
+        "touched": api.time.time(), "lock": threading.Lock(),
+    }
+    try:
+        status, body = call(base_url, "/v1/simulate", {"session_id": sid, "netlist": netlist()})
+        assert status == 500
+        assert body["error"]["code"] == "ENGINE_ERROR"
+        assert "sensitive-internal-detail" not in json.dumps(body)
+    finally:
+        api.SESSIONS.pop(sid, None)
