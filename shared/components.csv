@@ -9,4 +9,4 @@ CMP038;Interrupteur à bascule (fermé);Interrupteurs et relais;18,51;pdf;yes;no
 CMP003;Résistance 220 Ω;Composants passifs;0,1;estime;yes;yes;no;no;resistor;{"resistance":220,"power_rating_w":0.25};21;yes;no
 CMP005;Résistance 1 kΩ;Composants passifs;0,1;estime;yes;yes;no;no;resistor;{"resistance":1000,"power_rating_w":0.25};22;yes;no
 CMP004;Résistance 330 Ω;Composants passifs;0,1;estime;yes;yes;no;no;resistor;{"resistance":330,"power_rating_w":0.25};23;yes;no
-CMP070;Capteur 3,3 V (module);Capteurs;12,50;estime;no;yes;no;no;sensor_3v3;{"max_voltage":3.3,"min_voltage":2.0,"input_resistance":100000};24;yes;no
+CMP083;Capteur analogique 3,3 V;Capteurs;8,0;estime;no;yes;no;no;sensor_3v3;{"max_voltage":3.3,"min_voltage":2.0,"input_resistance":100000};24;yes;no
