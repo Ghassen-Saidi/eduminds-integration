@@ -284,8 +284,6 @@ class Handler(BaseHTTPRequestHandler):
                     current_failures.add(key)
                     if key not in entry["active_failure_keys"]:
                         newly_seen_messages.append(message)
-                entry["active_failure_keys"] = current_failures
-
                 if newly_seen_messages:
                     attestation = create_attestation(
                         scenario=entry["scenario"],
@@ -296,6 +294,11 @@ class Handler(BaseHTTPRequestHandler):
                     if attestation:
                         result = dict(result)
                         result["attestation"] = attestation
+                        entry["active_failure_keys"] = current_failures
+                else:
+                    # Also age cleared failures out so a later recurrence can
+                    # be signed. If signing is not configured, retain the prior
+                    # set so the active fault is retried on the next update.
             return self._send(200, result)
         return self._error(404, "NOT_FOUND", "no such route")
 
