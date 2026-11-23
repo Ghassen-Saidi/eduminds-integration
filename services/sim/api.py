@@ -242,6 +242,7 @@ class Handler(BaseHTTPRequestHandler):
                 SESSIONS[sid] = {
                     "session": Session(scenario), "scenario": scenario,
                     "application_session_id": application_session_id,
+                    "active_failure_keys": set(),
                     "touched": time.time(), "lock": threading.Lock(),
                 }
             return self._send(200, {"session_id": sid, "scenario": scenario})
@@ -266,16 +267,35 @@ class Handler(BaseHTTPRequestHandler):
                 # an untrusted browser client.
                 sys.stderr.write("simulator engine error: %r\n" % exc)
                 return self._error(500, "ENGINE_ERROR", "simulation failed")
-            if entry and entry.get("application_session_id"):
-                attestation = create_attestation(
-                    scenario=entry["scenario"],
-                    sim_session_id=sid,
-                    application_session_id=entry["application_session_id"],
-                    result=result,
-                )
-                if attestation:
-                    result = dict(result)
-                    result["attestation"] = attestation
+            if entry and entry.get("application_session_id") and not result.get("stale"):
+                # Count a continuous fault once. A candidate can be signed again
+                # only after it disappears from a fresh engine result and then
+                # returns. This is the trusted equivalent of the UI edge trigger.
+                current_failures = set()
+                newly_seen_messages = []
+                for message in result.get("messages", []):
+                    if not isinstance(message, dict) or message.get("code") not in {
+                        "LED_OVERCURRENT", "SHORT_CIRCUIT",
+                        "SHORT_CIRCUIT_CURRENT", "SENSOR_OVERVOLTAGE",
+                    }:
+                        continue
+                    component = message.get("component") or ""
+                    key = (message["code"], str(component))
+                    current_failures.add(key)
+                    if key not in entry["active_failure_keys"]:
+                        newly_seen_messages.append(message)
+                entry["active_failure_keys"] = current_failures
+
+                if newly_seen_messages:
+                    attestation = create_attestation(
+                        scenario=entry["scenario"],
+                        sim_session_id=sid,
+                        application_session_id=entry["application_session_id"],
+                        result={**result, "messages": newly_seen_messages},
+                    )
+                    if attestation:
+                        result = dict(result)
+                        result["attestation"] = attestation
             return self._send(200, result)
         return self._error(404, "NOT_FOUND", "no such route")
 
