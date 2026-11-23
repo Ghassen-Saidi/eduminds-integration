@@ -50,19 +50,29 @@ const byMarker = tokensByMarker(parseTokens(componentsCsv));
 let runtime = null;
 let client = null;
 
-export function startSim(lab) {
-  client = createSimClient({ scenario: lab.scenario, onStatus: (s) => showSimStatus(s) });
+export function startSim(lab, databaseSession) {
+  if (!databaseSession?.id) throw new Error('A persisted EduMinds database session is required');
+  client = createSimClient({
+    scenario: lab.scenario,
+    applicationSessionId: databaseSession.id,
+    onStatus: (s) => showSimStatus(s),
+  });
   runtime = createLabRuntime({
     template, byMarker, mapping: eventMap,
-    client, logEvent,                       // db.js logEvent, unchanged
+    client, logEvent,
+    submitAttestation: submitSimulationAttestation,
     uuid: () => crypto.randomUUID(),
-    onRender: (state) => vr.applySimState(state),   // new: see 5
+    onRender: (state) => vr.applySimState(state),
   });
-  runtime.start({ lab });
+  runtime.start({ sessionId: databaseSession.id, lab });
 }
 
 // In the client that receives the simulation result (poll or callback):
 export function onSimResult(result) { runtime?.apply(result); }
+
+// The student app must await the database session before creating the
+// simulator session. The simulator server signs fresh failure candidates,
+// and runtime forwards that attestation separately from client telemetry.
 ```
 
 ## 4. Camera callback
@@ -150,3 +160,24 @@ recorded by a trusted server-side verifier (see `docs/REMAINING_WORK.md`), which
 is what `supabase/migrations/0003_secure_telemetry.sql` enforces. The client
 writes `lab_started` / `component_taken` / `hint_used` / `lab_ended` and a
 throttled `sim_result` snapshot tagged `student_client_unverified`.
+
+
+## 9. Trusted financial telemetry (migration 0005)
+
+The simulator session must be bound to the UUID returned by the student app's
+`startSession(lab)`. Pass that UUID as `applicationSessionId` when creating
+`createSimClient`. The simulator service signs fresh financial failure
+candidates only when `EDUMINDS_ATTESTATION_SECRET` is configured on the
+server; this secret must never appear in browser code.
+
+`createLabRuntime` receives `submitAttestation: submitSimulationAttestation`.
+The student app sends the signed envelope to the
+`record-signed-sim-result` Edge Function. The function verifies the logged-in
+user, HMAC, signature age, application session ownership, and lab scenario.
+The database function then records the signed run atomically and rejects
+replays. Browser `logEvent('failure_caused')` calls are deliberately blocked.
+
+Deployment order and secret setup are documented in
+`docs/SUPABASE_HARDENING.md`. Do not deploy this feature before migration
+`0005_harden_student_writes.sql` is applied and both server environments share
+the same high-entropy attestation secret.
