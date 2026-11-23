@@ -125,9 +125,9 @@ function startRuntime() {
       state.mat = mat;
       el('mat').className = 'chip ' + (mat.found ? 'ok' : 'warn');
       el('mat').textContent = mat.found ? 'plateau : détecté' : 'plateau : montrez les 4 coins';
-      // Mat lost: an empty frame ages the runtime's window, so a board that is
-      // really gone clears after 3 missed detections (one bad frame cannot).
-      if (!mat.found) state.runtime?.place([]);
+      // The camera pump sends an empty frame through onFrames for each missed
+      // detection. Do not call runtime.place([]) here as well: that would age
+      // the runtime twice and desynchronise it from the pump's rolling window.
       drawOverlay();
     },
     onFrames: (window) => {
