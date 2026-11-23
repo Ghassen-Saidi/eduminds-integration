@@ -1,9 +1,20 @@
 # Supabase validation
 
-Run `psql "$DATABASE_URL" -f supabase/tests/checks.sql` only on a disposable
-database after migrations 0001, 0002 and 0003. The checks wrap fixtures in a
-transaction and roll back.
+Run these checks only against a disposable database, never against production:
 
-They verify a trusted failure aggregate, allow an unverified snapshot, deny a
-student-authored financial failure, and reject an invalid failure code. They
-do not replace live Auth, Data API, teacher-account or advisor verification.
+```bash
+psql "$DATABASE_URL" -f supabase/tests/checks.sql
+psql "$DATABASE_URL" -f supabase/tests/rls_hardening.sql
+```
+
+`checks.sql` verifies a trusted failure aggregate, allows an unverified
+snapshot, denies a student-authored financial failure, and rejects an invalid
+failure code. It applies after migrations 0001–0003.
+
+`rls_hardening.sql` verifies the column-level student/session grants and
+server-only simulator function introduced by migration 0005. Run it after
+migrations 0001–0005.
+
+Neither file replaces live Auth, Data API, anonymous-user, teacher-account,
+Edge Function secret, or Supabase advisor verification. These must still be
+tested against the intended active project after deployment.
