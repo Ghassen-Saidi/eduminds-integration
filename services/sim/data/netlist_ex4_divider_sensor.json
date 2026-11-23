@@ -1,74 +1,17 @@
 {
-  "schema_version": "0.2",
-  "scenario": "ex4_divider_sensor",
-  "domain": "analog",
-  "components": [
-    {
-      "id": "BAT1",
-      "type": "battery",
-      "params": {
-        "voltage": 9.0
-      }
-    },
-    {
-      "id": "R1",
-      "type": "resistor",
-      "params": {
-        "resistance": 1000,
-        "power_rating_w": 0.25
-      }
-    },
-    {
-      "id": "R2",
-      "type": "resistor",
-      "params": {
-        "resistance": 330,
-        "power_rating_w": 0.25
-      }
-    },
-    {
-      "id": "SENSOR1",
-      "type": "sensor_3v3",
-      "params": {
-        "max_voltage": 3.3,
-        "min_voltage": 2.0,
-        "input_resistance": 100000
-      }
-    },
-    {
-      "id": "GND1",
-      "type": "ground",
-      "params": {}
-    }
+  "schema_version":"0.2","scenario":"ex4_divider_sensor","domain":"analog",
+  "components":[
+    {"id":"BAT1","type":"battery","params":{"voltage":12}},
+    {"id":"REG1","type":"regulator_3v3","params":{"voltage":3.3,"dropout_v":1.0,"input_resistance":10000,"max_output_current":0.5}},
+    {"id":"POT1","type":"resistor","params":{"resistance":5000,"power_rating_w":0.25}},
+    {"id":"SENSOR1","type":"sensor_3v3","params":{"max_voltage":3.3,"min_voltage":2.0,"input_resistance":100000}},
+    {"id":"GND1","type":"ground","params":{}}
   ],
-  "nets": [
-    {
-      "id": "N1",
-      "connections": [
-        "BAT1.pos",
-        "R1.a"
-      ]
-    },
-    {
-      "id": "N2",
-      "connections": [
-        "R1.b",
-        "R2.a",
-        "SENSOR1.pos"
-      ]
-    },
-    {
-      "id": "GND",
-      "connections": [
-        "R2.b",
-        "SENSOR1.neg",
-        "BAT1.neg",
-        "GND1.gnd"
-      ]
-    }
+  "nets":[
+    {"id":"N1","connections":["BAT1.pos","REG1.vin"]},
+    {"id":"N2","connections":["REG1.vout","POT1.a"]},
+    {"id":"N3","connections":["POT1.b","SENSOR1.pos"]},
+    {"id":"GND","connections":["REG1.gnd","SENSOR1.neg","BAT1.neg","GND1.gnd"]}
   ],
-  "expected": {
-    "sensor_state": "powered",
-    "note": "V = 9 x R2 / (R1 + R2), loaded by the 100 kOhm sensor input: 9 x 330 / 1330 = 2.23 V, inside 2.0-3.3 V."
-  }
+  "expected":{"sensor_state":"powered","sensor_voltage_v":3.3,"note":"Ideal 3.3 V regulator model; potentiometer is currently fixed at its 50% nominal setting."}
 }

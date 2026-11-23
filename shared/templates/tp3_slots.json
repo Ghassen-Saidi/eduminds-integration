@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scenario": "ex2_diode_buzzer",
+  "scenario": "ex5_short_circuit",
   "mat": {
     "w_mm": 420,
     "h_mm": 297
@@ -18,35 +18,26 @@
       "accepts": [
         "CMP059"
       ],
-      "x": 0.28,
+      "x": 0.24,
+      "y": 0.36,
+      "theta_deg": 0
+    },
+    {
+      "instance": "FUSE1",
+      "accepts": [
+        "CMP068"
+      ],
+      "x": 0.5,
       "y": 0.36,
       "theta_deg": 0
     },
     {
       "instance": "SW1",
       "accepts": [
-        "CMP038"
+        "CMP037"
       ],
-      "x": 0.62,
+      "x": 0.76,
       "y": 0.36,
-      "theta_deg": 0
-    },
-    {
-      "instance": "D1",
-      "accepts": [
-        "CMP024"
-      ],
-      "x": 0.62,
-      "y": 0.66,
-      "theta_deg": 0
-    },
-    {
-      "instance": "BUZZER1",
-      "accepts": [
-        "CMP045"
-      ],
-      "x": 0.28,
-      "y": 0.66,
       "theta_deg": 0
     }
   ],
@@ -55,22 +46,20 @@
       "id": "N1",
       "connections": [
         "BAT1.pos",
-        "SW1.a"
+        "FUSE1.a"
       ]
     },
     {
       "id": "N2",
       "connections": [
-        "SW1.b",
-        "D1.cathode",
-        "BUZZER1.pos"
+        "FUSE1.b",
+        "SW1.a"
       ]
     },
     {
       "id": "GND",
       "connections": [
-        "D1.anode",
-        "BUZZER1.neg",
+        "SW1.b",
         "BAT1.neg",
         "GND1.gnd"
       ]

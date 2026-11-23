@@ -3,86 +3,44 @@
   "scenarios": [
     {
       "id": "ex1_led_series",
-      "title": "Light an LED safely",
-      "objective": "Understand why an LED needs a series resistor and what a switch does.",
+      "title": "LED and series resistor",
+      "objective": "Protect a LED from overcurrent.",
       "target_netlist": "netlist_ex1_led.json",
       "success": {
         "component": "LED1",
         "state": "on"
       },
       "student_can_change": [
-        "switch open/closed",
+        "switch state",
         "resistor value",
         "LED direction"
-      ],
-      "hints": {
-        "LED_OVERCURRENT": "Put the resistor in series between the battery and the LED so it limits the current.",
-        "LED_REVERSED": "An LED only conducts one way. Turn it around so the anode faces the battery's + side.",
-        "NO_SOURCE": "Every circuit needs a power source. Place the battery.",
-        "MISSING_COMPONENT": "This exercise uses a battery, a switch, a resistor, an LED and ground.",
-        "WIRING_DIFFERS": "All parts are there, but not in a single loop. Follow the current: battery, resistor, LED, ground, switch, back to the battery."
-      }
-    },
-    {
-      "id": "ex2_diode_buzzer",
-      "title": "Diode and buzzer",
-      "objective": "Understand a diode placed across a load and why its direction matters.",
-      "target_netlist": "netlist_ex2_diode_buzzer.json",
-      "success": {
-        "component": "BUZZER1",
-        "state": "sounding"
-      },
-      "student_can_change": [
-        "switch open/closed",
-        "diode direction"
-      ],
-      "hints": {
-        "SHORT_CIRCUIT": "The diode is conducting straight across the battery. Flip it so it blocks current in normal operation.",
-        "NO_SOURCE": "Every circuit needs a power source. Place the battery.",
-        "MISSING_COMPONENT": "This exercise uses a battery, a switch, a diode, a buzzer and ground.",
-        "WIRING_DIFFERS": "The diode and the buzzer must be in parallel, after the switch."
-      }
-    },
-    {
-      "id": "ex3_ultrasonic_lcd",
-      "title": "Distance display",
-      "objective": "Wire an ultrasonic sensor and an LCD to an Arduino and read a distance.",
-      "target_netlist": "netlist_ex3_arduino_ultrasonic_lcd.json",
-      "success": {
-        "component": "LCD1",
-        "state": "showing_distance"
-      },
-      "student_can_change": [
-        "sensor distance"
-      ],
-      "hints": {
-        "SENSOR_NO_POWER": "The sensor needs 5V and GND from the Arduino.",
-        "LCD_NO_POWER": "The LCD needs 5V on VDD and GND on VSS.",
-        "WIRING_TRIG_ECHO": "TRIG goes to D9 and ECHO to D10 (the pins used by the sketch).",
-        "WIRING_LCD": "Check RS to D12, E to D11 and D4 to D7 to D5 to D2.",
-        "BACKLIGHT_NO_RESISTOR": "The LCD backlight is an LED: put a resistor in series."
-      }
+      ]
     },
     {
       "id": "ex4_divider_sensor",
-      "title": "Power a 3.3 V sensor from 9 V",
-      "objective": "Build a voltage divider so a 3.3 V sensor receives between 2.0 and 3.3 V from a 9 V battery.",
+      "title": "12 V, 3.3 V regulator, potentiometer and sensor",
+      "objective": "Power a 3.3 V analog sensor from the 12 V lab supply.",
       "target_netlist": "netlist_ex4_divider_sensor.json",
       "success": {
         "component": "SENSOR1",
         "state": "powered"
       },
       "student_can_change": [
-        "resistor values"
-      ],
-      "hints": {
-        "SENSOR_OVERVOLTAGE": "The sensor is above its 3.3 V maximum. Use the divider formula: V = 9 V x R2 / (R1 + R2), with the sensor across R2.",
-        "SENSOR_UNDERPOWERED": "The sensor is below its 2.0 V minimum. A smaller R1 or a larger R2 raises the divider output.",
-        "SENSOR_REVERSED": "The sensor is connected the wrong way round. Its + terminal goes to the middle of the divider.",
-        "NO_SOURCE": "Every circuit needs a power source. Place the battery.",
-        "MISSING_COMPONENT": "This exercise uses a battery, two resistors, a 3.3 V sensor and ground.",
-        "WIRING_DIFFERS": "All parts are there, but the divider is not wired as in the exercise: battery, then R1, then R2 to ground, with the sensor across R2."
-      }
+        "potentiometer setting"
+      ]
+    },
+    {
+      "id": "ex5_short_circuit",
+      "title": "Short circuit and 500 mA fuse",
+      "objective": "Observe fuse protection when the push button closes a short circuit.",
+      "target_netlist": "netlist_ex5_short_circuit.json",
+      "success": {
+        "component": "FUSE1",
+        "state": "blown"
+      },
+      "student_can_change": [
+        "push button state"
+      ]
     }
   ]
 }

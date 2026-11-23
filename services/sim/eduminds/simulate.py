@@ -158,10 +158,18 @@ def _simulate_analog(netlist, library, result):
             conductances.append((n1, n2, 1.0 / p["equivalent_resistance"]))
         elif t == "sensor_3v3":
             conductances.append((n1, n2, 1.0 / p["input_resistance"]))
+        elif t == "fuse" and not p.get("blown", False):
+            conductances.append((n1, n2, 1.0 / p["resistance"]))
+        elif t == "regulator_3v3":
+            conductances.append((idx(f"{cid}.vin"), idx(f"{cid}.gnd"), 1.0 / p["input_resistance"]))
         elif t == "switch" and p["closed"]:
             conductances.append((n1, n2, 1.0 / SWITCH_ON_RESISTANCE))
         elif t == "battery":
             vsources.append((n1, n2, p["voltage"]))
+            vs_owner.append(cid)
+        elif t == "regulator_3v3":
+            source_voltage = p["voltage"] if p.get("enabled", True) else 0.0
+            vsources.append((idx(f"{cid}.vout"), idx(f"{cid}.gnd"), source_voltage))
             vs_owner.append(cid)
         elif t in ("led", "diode"):
             diodes.append((n1, n2, p["forward_voltage"], DIODE_ON_RESISTANCE))
@@ -187,6 +195,15 @@ def _simulate_analog(netlist, library, result):
         if t == "ground":
             out[cid] = {"state": "ok"}
             continue
+        if t == "regulator_3v3":
+            vin_v = v(f"{cid}.vin") - v(f"{cid}.gnd")
+            vout_v = v(f"{cid}.vout") - v(f"{cid}.gnd")
+            enabled = p.get("enabled", True) and vin_v >= p["voltage"] + p["dropout_v"]
+            out[cid] = {"state": "regulating" if enabled else "dropout", "input_voltage_v": vin_v,
+                        "voltage_v": vout_v, "current_a": -sol.vsrc_i[vs_owner.index(cid)] if enabled else 0.0}
+            if not enabled:
+                messages.append(message("REGULATOR_DROPOUT", "warning", cid, voltage=vin_v))
+            continue
         vd = v(f"{cid}.{terms[0]}") - v(f"{cid}.{terms[1]}")
         entry = {"voltage_v": vd}
         if t == "resistor":
@@ -196,6 +213,12 @@ def _simulate_analog(netlist, library, result):
             if power > p["power_rating_w"]:
                 entry["state"] = "overheating"
                 messages.append(message("RESISTOR_OVERHEAT", "warning", cid, power=power, rating=p["power_rating_w"]))
+        elif t == "fuse":
+            current = vd / p["resistance"] if not p.get("blown", False) else 0.0
+            blown = p.get("blown", False) or abs(current) > p["current_rating_a"]
+            entry.update(current_a=current, state="blown" if blown else "intact")
+            if blown:
+                messages.append(message("FUSE_BLOWN", "warning", cid, current=current))
         elif t == "switch":
             closed = p["closed"]
             entry.update(current_a=vd / SWITCH_ON_RESISTANCE if closed else 0.0,

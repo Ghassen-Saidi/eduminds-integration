@@ -88,6 +88,8 @@ _POSITIVE = {
     "diode": ("forward_voltage",),
     "buzzer": ("equivalent_resistance", "rated_voltage", "min_voltage"),
     "sensor_3v3": ("max_voltage", "min_voltage", "input_resistance"),
+    "regulator_3v3": ("voltage", "dropout_v", "input_resistance", "max_output_current"),
+    "fuse": ("resistance", "current_rating_a"),
 }
 
 
@@ -132,6 +134,10 @@ def validate_input(netlist, library):
             v = params.get(key)
             if not _is_number(v) or v <= 0:
                 errors.append(message("INVALID_PARAM", "error", cid, param=key))
+        if ctype == "regulator_3v3" and not isinstance(params.get("enabled", True), bool):
+            errors.append(message("INVALID_PARAM", "error", cid, param="enabled"))
+        if ctype == "fuse" and not isinstance(params.get("blown", False), bool):
+            errors.append(message("INVALID_PARAM", "error", cid, param="blown"))
         if ctype == "switch" and not isinstance(params.get("closed"), bool):
             errors.append(message("INVALID_PARAM", "error", cid, param="closed"))
         if ctype == "hc_sr04" and (not _is_number(params.get("distance_cm")) or params["distance_cm"] < 0):

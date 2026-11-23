@@ -16,7 +16,7 @@
     {
       "instance": "BAT1",
       "accepts": [
-        "CMP063"
+        "CMP059"
       ],
       "x": 0.28,
       "y": 0.36,
@@ -25,9 +25,10 @@
     {
       "instance": "R1",
       "accepts": [
+        "CMP001",
         "CMP003",
-        "CMP004",
-        "CMP005"
+        "CMP005",
+        "CMP007"
       ],
       "x": 0.62,
       "y": 0.36,
@@ -45,7 +46,7 @@
     {
       "instance": "SW1",
       "accepts": [
-        "CMP038"
+        "CMP039"
       ],
       "x": 0.28,
       "y": 0.66,
