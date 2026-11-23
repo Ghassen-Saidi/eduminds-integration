@@ -6,23 +6,23 @@
       "code": "led_resistor",
       "scenario": "ex1_led_series",
       "title_fr": "TP 1 · LED + résistance",
-      "sub_fr": "Loi d’Ohm : la LED brûle sans résistance",
+      "sub_fr": "Loi d’Ohm : protéger une LED alimentée en 12 V",
       "template": "tp1_slots.json"
     },
     {
       "id": 2,
       "code": "divider_sensor",
       "scenario": "ex4_divider_sensor",
-      "title_fr": "TP 2 · Diviseur + capteur 3,3 V",
-      "sub_fr": "Diviseur de tension : alimenter un capteur 3,3 V depuis 9 V",
+      "title_fr": "TP 2 · Régulateur 3,3 V + potentiomètre",
+      "sub_fr": "Alimenter et ajuster un capteur analogique 3,3 V depuis une alimentation 12 V",
       "template": "tp2_slots.json"
     },
     {
       "id": 3,
-      "code": "diode_buzzer",
-      "scenario": "ex2_diode_buzzer",
-      "title_fr": "TP 3 · Diode + buzzer",
-      "sub_fr": "Une diode de protection : le sens compte",
+      "code": "short_circuit",
+      "scenario": "ex5_short_circuit",
+      "title_fr": "TP 3 · Court-circuit et fusible",
+      "sub_fr": "Comprendre le rôle du fusible et éviter un court-circuit",
       "template": "tp3_slots.json"
     }
   ]
