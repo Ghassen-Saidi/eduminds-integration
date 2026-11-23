@@ -7,7 +7,7 @@ import { path } from '../harness/chain.mjs';
 const tokens = parseTokens(readFileSync(path('shared/components.csv'), 'utf8'));
 
 test('the token table parses every row with its sim columns', () => {
-  assert.equal(tokens.length, 10);
+  assert.equal(tokens.length, 11);
   const led = tokens.find((t) => t.ref === 'CMP018');
   assert.deepEqual(led.params, { color: 'red', forward_voltage: 2.0, max_current: 0.03 });
   assert.equal(led.simType, 'led');
@@ -19,7 +19,7 @@ test('the token table parses every row with its sim columns', () => {
 test('French decimal commas and lab flags are read correctly', () => {
   const r330 = tokens.find((t) => t.markerId === 23);
   assert.equal(r330.priceTnd, 0.1);
-  assert.deepEqual(r330.labs, []);              // not in any lab's toolbox yet
+  assert.deepEqual(r330.labs, [1, 2]);          // 330 ohm is the TP1 answer and a TP2 divider value
   const sw = tokens.filter((t) => t.ref === 'CMP038');
   assert.equal(sw.length, 2);                   // one token per switch state
   assert.deepEqual(sw.map((t) => t.params.closed).sort(), [false, true]);

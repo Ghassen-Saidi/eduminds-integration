@@ -1,0 +1,54 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex4_divider_sensor",
+  "status": "warning",
+  "messages": [
+    {
+      "code": "SENSOR_UNDERPOWERED",
+      "severity": "warning",
+      "component": "SENSOR1",
+      "text": "SENSOR1 receives only 1.62 V, below the 2.0 V it needs to work. Check the divider ratio.",
+      "hint": "The sensor is below its 2.0 V minimum. A smaller R1 or a larger R2 raises the divider output."
+    }
+  ],
+  "nodes": {
+    "N1": 9,
+    "N2": 1.620029455,
+    "GND": 0
+  },
+  "components": {
+    "GND1": {
+      "state": "ok"
+    },
+    "BAT1": {
+      "voltage_v": 9,
+      "current_a": 0.007379971,
+      "state": "ok"
+    },
+    "R1": {
+      "voltage_v": 7.379970545,
+      "current_a": 0.007379971,
+      "power_w": 0.054463965,
+      "state": "ok"
+    },
+    "R2": {
+      "voltage_v": 1.620029455,
+      "current_a": 0.00736377,
+      "power_w": 0.011929525,
+      "state": "ok"
+    },
+    "SENSOR1": {
+      "voltage_v": 1.620029455,
+      "current_a": 0.0000162,
+      "reading_v": 1.620029455,
+      "state": "underpowered"
+    }
+  },
+  "scenario_check": {
+    "built_correctly": true,
+    "goal_reached": false,
+    "completed": false,
+    "missing": [],
+    "extra": []
+  }
+}

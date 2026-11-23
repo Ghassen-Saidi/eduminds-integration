@@ -47,6 +47,9 @@ TEXTS = {
     "WIRING_TRIG_ECHO": "The sensor's TRIG/ECHO are not wired to the pins the program uses (D9, D10).",
     "WIRING_LCD": "The LCD control or data pins do not match the program (RS D12, E D11, D4 to D7 on D5 to D2).",
     "WIRING_LCD_RW_V0": "LCD pins RW and V0 must be connected to GND.",
+    "SENSOR_OVERVOLTAGE": "{component} receives {voltage:.2f} V, above its {max_voltage:.1f} V maximum. Bring the supply down with a voltage divider.",
+    "SENSOR_UNDERPOWERED": "{component} receives only {voltage:.2f} V, below the {min_voltage:.1f} V it needs to work. Check the divider ratio.",
+    "SENSOR_REVERSED": "{component} is the wrong way round: its + terminal must go to the middle of the divider.",
     "BACKLIGHT_NO_RESISTOR": "The LCD backlight is connected straight to 5V. Put a resistor in series.",
 }
 
@@ -84,6 +87,7 @@ _POSITIVE = {
     "led": ("forward_voltage", "max_current"),
     "diode": ("forward_voltage",),
     "buzzer": ("equivalent_resistance", "rated_voltage", "min_voltage"),
+    "sensor_3v3": ("max_voltage", "min_voltage", "input_resistance"),
 }
 
 

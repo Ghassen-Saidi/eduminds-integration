@@ -35,7 +35,7 @@ test('the printed token sheet decodes back to its marker ids', { skip: !sharp &&
 });
 
 test('both mats decode their four corners as 100-103', { skip: !sharp && 'install js-aruco2 and sharp (npm ci)' }, async () => {
-  for (const file of ['mat-tp1.png', 'mat-tp3.png']) {
+  for (const file of ['mat-tp1.png', 'mat-tp2.png', 'mat-tp3.png']) {
     const layout = JSON.parse(readFileSync(path('assets/print/' + file.replace('.png', '.layout.json')), 'utf8'));
     const found = [];
     for (const c of layout.corners) found.push(...(await decodeRegion(file, { x: c.x, y: c.y, size: 400 })));
@@ -44,7 +44,7 @@ test('both mats decode their four corners as 100-103', { skip: !sharp && 'instal
 });
 
 test('the mat never uses the part marker range 1-12 for corners', () => {
-  for (const file of ['mat-tp1.layout.json', 'mat-tp3.layout.json']) {
+  for (const file of ['mat-tp1.layout.json', 'mat-tp2.layout.json', 'mat-tp3.layout.json']) {
     const layout = JSON.parse(readFileSync(path('assets/print/' + file), 'utf8'));
     assert.ok(layout.corners.every((c) => c.id >= 100));
   }

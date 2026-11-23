@@ -11,7 +11,8 @@ function caseOut(name) { return runCase(`fixtures/placements/${name}.json`); }
 
 test('every case produces a netlist the client guard accepts', () => {
   for (const name of ['tp1_all_330', 'tp1_r_220', 'tp1_missing_r', 'tp1_led_reversed', 'tp1_switch_open',
-    'tp1_empty', 'tp1_blip', 'tp1_wrong_slot', 'tp1_crowded', 'tp3_all']) {
+    'tp1_empty', 'tp1_blip', 'tp1_wrong_slot', 'tp1_crowded', 'tp2_correct',
+    'tp2_overvoltage', 'tp2_underpowered', 'tp3_all']) {
     const out = caseOut(name);
     assert.equal(out.check.ok, true, `${name}: ${out.check.errors}`);
     assert.ok(out.result, `${name}: no engine result`);
@@ -48,6 +49,36 @@ test('TP1 with 220 ohm: burned at 31.7 mA, wired correctly, one money event', ()
   const failures = out.events.filter((e) => e.row.event_type === 'failure_caused');
   assert.equal(failures.length, 1);
   assert.equal(failures[0].row.failure_code, 'led_overcurrent');
+});
+
+test('TP2 with 1k over 330 ohm: sensor powered at 2.23 V, exercise complete', () => {
+  const out = caseOut('tp2_correct');
+  const sensor = out.result.components.SENSOR1;
+  assert.equal(sensor.state, 'powered');
+  assert.ok(Math.abs(sensor.voltage_v - 2.2276) < 0.005);
+  assert.equal(out.result.scenario_check.completed, true);
+  assert.equal(out.result.status, 'ok');
+  assert.deepEqual(out.events, []);
+});
+
+test('TP2 with 220 over 330 ohm: sensor destroyed, wired correctly, one money event', () => {
+  const out = caseOut('tp2_overvoltage');
+  const sensor = out.result.components.SENSOR1;
+  assert.equal(sensor.state, 'destroyed');
+  assert.ok(Math.abs(sensor.voltage_v - 5.3929) < 0.01);
+  assert.equal(out.result.scenario_check.built_correctly, true);
+  assert.equal(out.result.scenario_check.goal_reached, false);
+  const failures = out.events.filter((e) => e.row.event_type === 'failure_caused');
+  assert.equal(failures.length, 1);
+  assert.equal(failures[0].row.failure_code, 'sensor_overvoltage');
+});
+
+test('TP2 with 1k over 220 ohm: underpowered hint, no money event', () => {
+  const out = caseOut('tp2_underpowered');
+  assert.equal(out.result.components.SENSOR1.state, 'underpowered');
+  assert.ok(codes(out).includes('SENSOR_UNDERPOWERED'));
+  assert.equal(out.events.filter((e) => e.row.event_type === 'failure_caused').length, 0);
+  assert.equal(out.result.scenario_check.built_correctly, true);
 });
 
 test('TP1 without the resistor slot filled: open circuit, part reported missing, no money event', () => {

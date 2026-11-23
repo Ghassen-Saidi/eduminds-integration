@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex4_divider_sensor",
+  "status": "ok",
+  "messages": [],
+  "nodes": {
+    "N1": 9,
+    "N2": 2.227555688,
+    "GND": 0
+  },
+  "components": {
+    "GND1": {
+      "state": "ok"
+    },
+    "BAT1": {
+      "voltage_v": 9,
+      "current_a": 0.006772444,
+      "state": "ok"
+    },
+    "R1": {
+      "voltage_v": 6.772444312,
+      "current_a": 0.006772444,
+      "power_w": 0.045866002,
+      "state": "ok"
+    },
+    "R2": {
+      "voltage_v": 2.227555688,
+      "current_a": 0.006750169,
+      "power_w": 0.015036377,
+      "state": "ok"
+    },
+    "SENSOR1": {
+      "voltage_v": 2.227555688,
+      "current_a": 0.000022276,
+      "reading_v": 2.227555688,
+      "state": "powered"
+    }
+  },
+  "scenario_check": {
+    "built_correctly": true,
+    "goal_reached": true,
+    "completed": true,
+    "missing": [],
+    "extra": []
+  }
+}

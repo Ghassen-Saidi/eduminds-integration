@@ -32,7 +32,8 @@ export const LABS = registry.labs.map((l) => ({ id: l.id, code: l.code, title_fr
 ```
 
 `lab.scenario` is what the simulator needs; `lab.id` stays what the database
-needs. That is the mapping that was missing. The registry carries TP 1 and TP 3.
+needs. That is the mapping that was missing. The registry now carries TP 1,
+TP 2 (divider + 3.3 V sensor) and TP 3.
 
 ## 3. One runtime per lab, created on startLab
 
@@ -121,6 +122,8 @@ applySimState({ components, messages, scenarioCheck, stale, error }) {
   lamp.visible = Boolean(led && led.state === 'on');
   lamp.material.opacity = led?.brightness ?? 0;
   burnedBadge.visible = led?.state === 'burned';
+  const sensor = components?.SENSOR1;                 // TP 2
+  sensorPanel.text = sensor ? `capteur : ${sensor.state} · ${sensor.voltage_v.toFixed(2)} V` : '';
   hintPanel.text = (messages ?? []).map((m) => m.text).join('\n');
   doneBadge.visible = Boolean(scenarioCheck?.completed);
   staleBadge.visible = Boolean(stale);

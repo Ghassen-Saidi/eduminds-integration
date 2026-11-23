@@ -156,6 +156,8 @@ def _simulate_analog(netlist, library, result):
             conductances.append((n1, n2, 1.0 / p["resistance"]))
         elif t == "buzzer":
             conductances.append((n1, n2, 1.0 / p["equivalent_resistance"]))
+        elif t == "sensor_3v3":
+            conductances.append((n1, n2, 1.0 / p["input_resistance"]))
         elif t == "switch" and p["closed"]:
             conductances.append((n1, n2, 1.0 / SWITCH_ON_RESISTANCE))
         elif t == "battery":
@@ -210,6 +212,22 @@ def _simulate_analog(netlist, library, result):
                     messages.append(message("BUZZER_OVERVOLTAGE", "warning", cid, voltage=vd, rated=p["rated_voltage"]))
             elif vd <= -p["min_voltage"]:
                 messages.append(message("BUZZER_REVERSED", "warning", cid))
+        elif t == "sensor_3v3":
+            i = vd / p["input_resistance"]
+            entry.update(current_a=i, reading_v=vd, state="off")
+            if vd > p["max_voltage"]:
+                entry["state"] = "destroyed"
+                messages.append(message("SENSOR_OVERVOLTAGE", "warning", cid,
+                                        voltage=vd, max_voltage=p["max_voltage"]))
+            elif vd >= p["min_voltage"]:
+                entry["state"] = "powered"
+            elif vd > 0:
+                entry["state"] = "underpowered"
+                messages.append(message("SENSOR_UNDERPOWERED", "warning", cid,
+                                        voltage=vd, min_voltage=p["min_voltage"]))
+            else:
+                entry["state"] = "reversed"
+                messages.append(message("SENSOR_REVERSED", "warning", cid))
         elif t in ("led", "diode"):
             i = sol.diode_i[d_owner.index(cid)]
             entry["current_a"] = i

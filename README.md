@@ -11,8 +11,8 @@ engine, unmodified.
 | Path | What it is |
 |---|---|
 | `shared/labs.json` | lab (TP) ↔ scenario registry — the mapping the four projects never had |
-| `shared/components.csv` | token table: CMP ref → sim type, params, marker id (10 tokens) |
-| `shared/templates/*.json` | exercise geometry: slot positions on the mat, accepted refs, authored wiring |
+| `shared/components.csv` | token table: CMP ref → sim type, params, marker id (11 tokens, sensor included) |
+| `shared/templates/*.json` | exercise geometry: slot positions on the mat, accepted refs, authored wiring (TP1, TP2, TP3) |
 | `shared/events.map.json` | every simulator message code → an `events` row (or explicitly nothing) |
 | `src/perception.js` | 3-of-5 frame debounce: one bad camera frame cannot place or remove a part |
 | `src/mapper.js` | token → slot → instance, with position/orientation tolerance and rejections |
@@ -24,21 +24,21 @@ engine, unmodified.
 | `src/cameraLoop.js` | `<video>` → detection budget (every 2nd frame, ≤10/s) → the rolling window `perception.js` needs |
 | `src/appBridge.js` | the module the app imports: one lab runtime, frames in, event rows + render state out |
 | `services/sim/` | Team 3's engine (packaging fixed) + a stdlib HTTP service (optional bearer token, rate limit, TLS) |
-| `assets/print/` | printable token sheet and the two mats (corners 100–103) |
+| `assets/print/` | printable token sheet and the three mats (corners 100–103) |
 | `demo/` | a standalone phone page: camera → board → lamp/sensor, no app needed |
-| `tests/` | 77 Node tests + 73 pytest tests (150) |
+| `tests/` | 80 Node tests + 81 pytest tests (161) |
 
 ## Run it
 
 ```bash
 npm ci                         # sharp, js-aruco2, esbuild
-npm run test:all               # 73 python + 77 node tests (node tests print the assets first)
-npm run check:demo             # runs the service and drives TP1 end to end on a real socket
+npm run test:all               # 81 python + 80 node tests (node tests print the assets first)
+npm run check:demo             # runs the service and drives TP1 + TP2 end to end on a real socket
 
 npm run sim                    # HTTP service on 127.0.0.1:8000
 npm run demo                   # + the phone page on http://127.0.0.1:8000/
 npm run demo:tls               # https on :8443, needed for the camera on a phone (see docs/DEMO.md)
-node tools/run-case.mjs fixtures/placements/tp1_r_220.json   # one case, end to end
+node tools/run-case.mjs fixtures/placements/tp2_correct.json   # one case, end to end
 npm run print                  # regenerate assets/print/*.png
 npm run freeze                 # re-freeze the golden engine results after a deliberate change
 ```

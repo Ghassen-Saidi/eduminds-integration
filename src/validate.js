@@ -5,7 +5,7 @@
  * terminals in the nets looks like a frozen UI. Refuse to send that.
  */
 
-const TERMINAL_TYPES = new Set(['battery', 'switch', 'resistor', 'led', 'diode', 'buzzer', 'ground', 'arduino_uno', 'hc_sr04', 'lcd_16x2']);
+const TERMINAL_TYPES = new Set(['battery', 'switch', 'resistor', 'led', 'diode', 'buzzer', 'ground', 'arduino_uno', 'hc_sr04', 'lcd_16x2', 'sensor_3v3']);
 
 export function checkNetlist(netlist) {
   const errors = [];

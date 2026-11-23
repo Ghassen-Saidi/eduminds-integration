@@ -10,6 +10,7 @@ const POLARITY_SWAP = {
   diode: ['anode', 'cathode'],
   battery: ['pos', 'neg'],
   buzzer: ['pos', 'neg'],
+  sensor_3v3: ['pos', 'neg'],
   hc_sr04: ['VCC', 'GND'],
 };
 

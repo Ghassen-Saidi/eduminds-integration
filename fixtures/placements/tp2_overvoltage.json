@@ -1,0 +1,136 @@
+{
+  "name": "tp2_overvoltage",
+  "template": "tp2_slots.json",
+  "frames": [
+    [
+      {
+        "markerId": 1,
+        "x": 0.28,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 21,
+        "x": 0.62,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 23,
+        "x": 0.62,
+        "y": 0.66,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 24,
+        "x": 0.28,
+        "y": 0.66,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 1,
+        "x": 0.28,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 21,
+        "x": 0.62,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 23,
+        "x": 0.62,
+        "y": 0.66,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 24,
+        "x": 0.28,
+        "y": 0.66,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 1,
+        "x": 0.28,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 21,
+        "x": 0.62,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 23,
+        "x": 0.62,
+        "y": 0.66,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 24,
+        "x": 0.28,
+        "y": 0.66,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 1,
+        "x": 0.28,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 21,
+        "x": 0.62,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 23,
+        "x": 0.62,
+        "y": 0.66,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 24,
+        "x": 0.28,
+        "y": 0.66,
+        "theta_deg": 0
+      }
+    ],
+    [
+      {
+        "markerId": 1,
+        "x": 0.28,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 21,
+        "x": 0.62,
+        "y": 0.36,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 23,
+        "x": 0.62,
+        "y": 0.66,
+        "theta_deg": 0
+      },
+      {
+        "markerId": 24,
+        "x": 0.28,
+        "y": 0.66,
+        "theta_deg": 0
+      }
+    ]
+  ]
+}
