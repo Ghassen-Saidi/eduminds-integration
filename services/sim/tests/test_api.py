@@ -180,11 +180,20 @@ def test_signed_attestation_is_attached_only_to_bound_app_session(base_url, monk
         return {"payload": {"application_session_id": app_session}, "signature": "a" * 64}
 
     monkeypatch.setattr(api, "create_attestation", fake_attestation)
+
+    class FailureSession:
+        def update(self, _netlist):
+            return {
+                "status": "warning",
+                "messages": [{"code": "LED_OVERCURRENT", "component": "LED1"}],
+            }
+
     status, session = call(base_url, "/v1/session", {
         "scenario": "ex1_led_series",
         "application_session_id": app_session,
     })
     assert status == 200
+    api.SESSIONS[session["session_id"]]["session"] = FailureSession()
     status, result = call(base_url, "/v1/simulate", {
         "session_id": session["session_id"],
         "netlist": netlist(),
