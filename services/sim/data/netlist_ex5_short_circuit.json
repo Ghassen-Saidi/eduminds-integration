@@ -1,0 +1,62 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex5_short_circuit",
+  "domain": "analog",
+  "components": [
+    {
+      "id": "BAT1",
+      "type": "battery",
+      "params": {
+        "voltage": 12
+      }
+    },
+    {
+      "id": "FUSE1",
+      "type": "fuse",
+      "params": {
+        "resistance": 0.1,
+        "current_rating_a": 0.5
+      }
+    },
+    {
+      "id": "SW1",
+      "type": "switch",
+      "params": {
+        "closed": true
+      }
+    },
+    {
+      "id": "GND1",
+      "type": "ground",
+      "params": {}
+    }
+  ],
+  "nets": [
+    {
+      "id": "N1",
+      "connections": [
+        "BAT1.pos",
+        "FUSE1.a"
+      ]
+    },
+    {
+      "id": "N2",
+      "connections": [
+        "FUSE1.b",
+        "SW1.a"
+      ]
+    },
+    {
+      "id": "GND",
+      "connections": [
+        "SW1.b",
+        "BAT1.neg",
+        "GND1.gnd"
+      ]
+    }
+  ],
+  "expected": {
+    "fuse_state": "blown",
+    "current_rating_a": 0.5
+  }
+}
