@@ -12,15 +12,17 @@ const tp1 = readJson('shared/templates/tp1_slots.json');
 function runtime({ nowMs = () => 10000 } = {}) {
   const sent = [];
   const logged = [];
+  const attestations = [];
   const rendered = [];
   const rt = createLabRuntime({
     template: tp1, byMarker, mapping,
     client: { update: (n) => sent.push(n), stop: () => sent.push('stopped') },
     logEvent: (type, opts) => logged.push({ type, ...opts }),
+    submitAttestation: (attestation) => attestations.push(attestation),
     uuid: (() => { let n = 0; return () => `u${++n}`; })(),
     now: () => 'T', nowMs, onRender: (r) => rendered.push(r),
   });
-  return { rt, sent, logged, rendered };
+  return { rt, sent, logged, attestations, rendered };
 }
 
 test('a correct board becomes a netlist and is sent', () => {
@@ -112,4 +114,34 @@ test('end() stops the client', async () => {
   const { rt, sent } = runtime();
   await rt.end();
   assert.equal(sent.at(-1), 'stopped');
+});
+
+
+test('fresh signed simulator attestations are forwarded separately from client telemetry', () => {
+  const { rt, logged, attestations } = runtime();
+  rt.start({ sessionId: 'database-session-1' });
+  rt.place(readCase('fixtures/placements/tp1_r_220.json').frames);
+  const attestation = {
+    payload: { application_session_id: 'database-session-1', run_id: 'run-1' },
+    signature: 'a'.repeat(64),
+  };
+  rt.apply({
+    status: 'warning',
+    messages: [{ code: 'LED_OVERCURRENT', severity: 'warning', component: 'LED1' }],
+    components: { LED1: { state: 'burned' } },
+    attestation,
+  });
+  assert.deepEqual(attestations, [attestation]);
+  assert.equal(logged.some((event) => event.type === 'failure_caused'), false);
+});
+
+test('stale results never forward a simulator attestation', () => {
+  const { rt, attestations } = runtime();
+  rt.start({ sessionId: 'database-session-1' });
+  rt.apply({
+    stale: true,
+    messages: [{ code: 'LED_OVERCURRENT', severity: 'warning', component: 'LED1' }],
+    attestation: { payload: { run_id: 'run-1' }, signature: 'a'.repeat(64) },
+  });
+  assert.equal(attestations.length, 0);
 });
