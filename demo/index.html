@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>EduMinds — démo plateau</title>
+<style>
+  :root { color-scheme: dark; --bg:#0b1020; --panel:#141a2e; --ink:#e8ecf8; --muted:#93a0c2; --ok:#3ddc97; --warn:#ffcc66; --bad:#ff6b6b; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position:sticky; top:0; z-index:5; display:flex; gap:8px; align-items:center; padding:10px 12px; background:#0b1020ee; backdrop-filter:blur(6px); border-bottom:1px solid #202a45; flex-wrap:wrap; }
+  header h1 { font-size:15px; margin:0 8px 0 0; font-weight:600; letter-spacing:.2px; }
+  select, button { font:inherit; padding:7px 10px; border-radius:9px; border:1px solid #2b3556; background:#161d33; color:var(--ink); }
+  button.primary { background:#2b5cff; border-color:#2b5cff; }
+  button:disabled { opacity:.5; }
+  #stage { position:relative; aspect-ratio:16/10; background:#000; overflow:hidden; }
+  #video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  #overlay { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  #chips { display:flex; gap:6px; flex-wrap:wrap; padding:8px 12px; }
+  .chip { font-size:12px; padding:4px 9px; border-radius:999px; border:1px solid #2b3556; color:var(--muted); }
+  .chip.ok { color:#0b1020; background:var(--ok); border-color:var(--ok); }
+  .chip.warn { color:#241a00; background:var(--warn); border-color:var(--warn); }
+  .chip.bad { color:#2b0000; background:var(--bad); border-color:var(--bad); }
+  main { padding:0 12px 24px; display:grid; gap:12px; }
+  section { background:var(--panel); border:1px solid #202a45; border-radius:14px; padding:12px; }
+  section h2 { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 8px; }
+  ul { margin:0; padding-left:18px; }
+  li.part { list-style:none; margin-left:-18px; }
+  .lamp { display:flex; align-items:center; gap:10px; }
+  .bulb { width:44px; height:44px; border-radius:50%; background:#1b2440; border:1px solid #2b3556; }
+  .bulb.on { background:radial-gradient(circle at 40% 35%, #fff6cc, #ffcc33 55%, #b8860b); box-shadow:0 0 22px #ffcc33aa; border-color:#ffcc33; }
+  .bulb.burned { background:#3a1c1c; border-color:#ff6b6b; }
+  .muted { color:var(--muted); }
+  .hidden { display:none !important; }
+  #hint { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); max-width:80%; text-align:center; background:#0b1020cc; border:1px solid #2b3556; padding:14px 16px; border-radius:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>EduMinds · plateau</h1>
+  <select id="lab" aria-label="Exercice"></select>
+  <button id="start" class="primary">Démarrer la caméra</button>
+  <button id="stop" disabled>Arrêter</button>
+</header>
+
+<div id="stage">
+  <video id="video" playsinline muted autoplay></video>
+  <canvas id="overlay" width="1280" height="800"></canvas>
+  <div id="hint" class="hidden"></div>
+</div>
+
+<div id="chips">
+  <span class="chip" id="camera">caméra : arrêtée</span>
+  <span class="chip" id="mat">plateau : —</span>
+  <span class="chip" id="sim">simulateur : —</span>
+  <span class="chip" id="fps">0 détection/s</span>
+</div>
+
+<main>
+  <section>
+    <h2>Lampes</h2>
+    <div class="lamp">
+      <div class="bulb" id="bulb"></div>
+      <div>
+        <div id="bulbState" class="muted">rien sur le plateau</div>
+        <div id="bulbCurrent" class="muted"></div>
+      </div>
+    </div>
+  </section>
+  <section>
+    <h2>Sur le plateau</h2>
+    <ul id="parts"><li class="muted">—</li></ul>
+  </section>
+  <section>
+    <h2>Messages</h2>
+    <ul id="messages"><li class="muted">—</li></ul>
+  </section>
+</main>
+
+<script src="/demo/vendor/aruco.js"></script>
+<script type="module" src="/demo/main.js"></script>
+</body>
+</html>

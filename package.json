@@ -3,17 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Integration layer between the EduMinds student app, the ArUco/vision prototype and Team 3's circuit simulator, with the tests that hold it together.",
+  "description": "Integration layer between the EduMinds student app, the ArUco/vision prototype and Team 3's circuit simulator, with the tests that hold the seams together.",
   "scripts": {
+    "pretest": "npm run print",
     "test": "node --test tests/*.test.js",
     "test:sim": "python3 -m pytest -q services/sim",
     "test:all": "npm run test:sim && npm test",
     "sim": "python3 services/sim/api.py --port 8000",
     "print": "node tools/make-tokens.cjs",
     "case": "node tools/run-case.mjs",
-    "freeze": "node tools/freeze.mjs"
+    "freeze": "node tools/freeze.mjs",
+    "demo": "python3 services/sim/api.py --port 8000 --demo",
+    "demo:tls": "python3 services/sim/api.py --port 8443 --demo --tls",
+    "build:demo": "esbuild demo/vendor/aruco-entry.js --bundle --format=iife --minify --outfile=demo/vendor/aruco.js",
+    "check:demo": "node tools/check-demo.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "js-aruco2": "^2.0.0",
     "sharp": "^0.35.5"
   }

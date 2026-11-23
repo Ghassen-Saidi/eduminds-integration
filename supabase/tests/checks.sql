@@ -1,21 +1,21 @@
 -- Run with: psql "$DATABASE_URL" -f supabase/tests/checks.sql
--- Against a scratch database after 0001 (schema + seed) and 0002.
--- NOT verified from the sandbox: no Postgres was reachable here.
+-- On a disposable database after migrations 0001, 0002 and 0003.
+-- This file is not a production migration and all fixture data is rolled back.
 
 \set ON_ERROR_STOP on
 begin;
 
--- one virtual burnt LED, for a student and a session
 insert into auth.users (id) values ('00000000-0000-4000-8000-000000000001') on conflict do nothing;
 insert into students (id, nickname, class_name)
   values ('00000000-0000-4000-8000-000000000001', 'Test', '1A') on conflict do nothing;
 insert into sessions (id, student_id, lab_id)
   values ('00000000-0000-4000-8000-0000000000aa', '00000000-0000-4000-8000-000000000001', 1) on conflict do nothing;
+
+-- Simulate a trusted financial writer to test the aggregate view.
 insert into events (id, session_id, event_type, failure_code)
   values ('00000000-0000-4000-8000-0000000000bb', '00000000-0000-4000-8000-0000000000aa',
           'failure_caused', 'led_overcurrent') on conflict do nothing;
 
--- failures_prevented must price one burnt red LED at its unit price (0.50 TND)
 do $$
 declare saved numeric;
 begin
@@ -25,12 +25,28 @@ begin
   end if;
 end $$;
 
--- a sim_result row must be accepted, and a failure row must not need component_ref
-insert into events (id, session_id, event_type, payload)
-  values ('00000000-0000-4000-8000-0000000000cc', '00000000-0000-4000-8000-0000000000aa',
-          'sim_result', '{"status":"ok","components":{"LED1":{"state":"on","current_a":0.0211}}}'::jsonb);
+-- Browser-authenticated students may submit unverified snapshots but cannot
+-- forge the event counted as money saved.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
 
--- an unknown failure code must be refused by the foreign key
+do $$
+begin
+  begin
+    insert into events (id, session_id, event_type, failure_code)
+      values ('00000000-0000-4000-8000-0000000000ee', '00000000-0000-4000-8000-0000000000aa',
+              'failure_caused', 'led_overcurrent');
+    raise exception 'client was allowed to insert a financial failure event';
+  exception when insufficient_privilege then
+    null; -- expected RLS denial
+  end;
+end $$;
+
+insert into events (id, session_id, event_type, payload)
+  values ('00000000-0000-4000-8000-0000000000ef', '00000000-0000-4000-8000-0000000000aa',
+          'sim_result', '{"source":"student_client_unverified","status":"ok"}'::jsonb);
+reset role;
+
 do $$
 begin
   begin
@@ -39,7 +55,7 @@ begin
               'failure_caused', 'made_up_code');
     raise exception 'an unknown failure_code was accepted';
   exception when foreign_key_violation then
-    null;   -- expected
+    null;
   end;
 end $$;
 
