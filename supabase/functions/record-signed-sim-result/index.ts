@@ -97,6 +97,7 @@ Deno.serve(async (request: Request) => {
   const issuedAt = payload.issued_at;
   if (payload.version !== 1 || typeof payload.run_id !== "string" || !UUID_RE.test(payload.run_id)
       || typeof payload.scenario !== "string" || typeof payload.sim_session_id !== "string"
+      || payload.application_session_id !== sessionId
       || !Number.isSafeInteger(issuedAt) || !Array.isArray(failures) || failures.length < 1 || failures.length > 100) {
     return jsonResponse(400, { error: "invalid_attestation_payload" });
   }
