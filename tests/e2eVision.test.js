@@ -44,7 +44,7 @@ test('a photographed 330 ohm board lights the LED through the real engine', asyn
   assert.equal(result.scenario_check.completed, true);
 });
 
-test('a photographed 220 ohm board burns the LED and logs one failure', async () => {
+test('a photographed 220 ohm board stores an unverified diagnostic, not a financial event', async () => {
   const tokens = BOARD.map((t) => (t.instance === 'R1' ? { ...t, markerId: 21 } : t));
   const logged = [];
   const runtime = createLabRuntime({
@@ -56,11 +56,13 @@ test('a photographed 220 ohm board burns the LED and logs one failure', async ()
   runtime.start({ sessionId: 's1' });
   const netlist = runtime.place(await frames(tokens));
   const result = runEngine(netlist);
-  runtime.apply(result);
+  const { rows } = runtime.apply(result);
   assert.equal(result.components.LED1.state, 'burned');
+  assert.equal(rows.filter(({ row }) => row.event_type === 'failure_caused').length, 1);
   assert.equal(logged.length, 1);
-  assert.equal(logged[0].type, 'failure_caused');
-  assert.equal(logged[0].failureCode, 'led_overcurrent');
+  assert.equal(logged[0].type, 'sim_result');
+  assert.equal(logged[0].payload.source, 'student_client_unverified');
+  assert.equal(logged[0].payload.messages[0].code, 'LED_OVERCURRENT');
 });
 
 test('a photographed reversed LED is reported as reversed, not burned', async () => {

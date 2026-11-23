@@ -9,28 +9,24 @@ const byMarker = tokensByMarker(parseTokens(readFileSync(path('shared/components
 const mapping = readJson('shared/events.map.json');
 const tp1 = readJson('shared/templates/tp1_slots.json');
 
-function runtime({ results = [] } = {}) {
+function runtime({ nowMs = () => 10000 } = {}) {
   const sent = [];
   const logged = [];
   const rendered = [];
   const rt = createLabRuntime({
-    template: tp1,
-    byMarker,
-    mapping,
+    template: tp1, byMarker, mapping,
     client: { update: (n) => sent.push(n), stop: () => sent.push('stopped') },
     logEvent: (type, opts) => logged.push({ type, ...opts }),
     uuid: (() => { let n = 0; return () => `u${++n}`; })(),
-    now: () => 'T',
-    onRender: (r) => rendered.push(r),
+    now: () => 'T', nowMs, onRender: (r) => rendered.push(r),
   });
-  return { rt, sent, logged, rendered, results };
+  return { rt, sent, logged, rendered };
 }
 
 test('a correct board becomes a netlist and is sent', () => {
   const { rt, sent } = runtime();
   rt.start({ sessionId: 's1' });
-  const c = readCase('fixtures/placements/tp1_all_330.json');
-  const netlist = rt.place(c.frames);
+  const netlist = rt.place(readCase('fixtures/placements/tp1_all_330.json').frames);
   assert.equal(netlist.components.length, 5);
   assert.equal(sent.at(-1).components.length, 5);
 });
@@ -44,44 +40,72 @@ test('a netlist the guard rejects is never sent', () => {
     client: { update: () => sent.push('sent'), stop: () => {} },
     logEvent: () => {}, uuid: () => 'u', onRender: (r) => rendered.push(r),
   });
-  const c = readCase('fixtures/placements/tp1_all_330.json');
-  assert.equal(rt.place(c.frames), null);
+  assert.equal(rt.place(readCase('fixtures/placements/tp1_all_330.json').frames), null);
   assert.equal(sent.length, 0);
   assert.equal(rendered.at(-1).error, 'netlist_rejected');
   assert.ok(rendered.at(-1).details.some((e) => e.includes('unknown component type')));
 });
 
-test('a burned LED result reaches db.js as one failure_caused event', async () => {
+test('component reference mapping preserves catalogue refs in event payloads', () => {
+  const { rt } = runtime();
+  rt.start({ sessionId: 's1' });
+  rt.place(readCase('fixtures/placements/tp1_r_220.json').frames);
+  const result = JSON.parse(readFileSync(path('fixtures/expected/tp1_r_220.result.json'), 'utf8'));
+  const { rows } = rt.apply(result);
+  const failure = rows.find(({ row }) => row.event_type === 'failure_caused');
+  assert.equal(failure.row.payload.component_ref, 'CMP018');
+  assert.equal(failure.row.payload.instance, 'LED1');
+});
+
+test('client does not submit financial failure events; it stores a diagnostic snapshot', () => {
   const { rt, logged } = runtime();
   rt.start({ sessionId: 's1' });
   rt.place(readCase('fixtures/placements/tp1_r_220.json').frames);
-  const result = readCase('fixtures/placements/tp1_r_220.json').result
-    ?? JSON.parse(readFileSync(path('fixtures/expected/tp1_r_220.result.json'), 'utf8'));
-  const { rows } = rt.apply(result);
-  assert.equal(logged.length, 1);
-  assert.equal(logged[0].type, 'failure_caused');
-  assert.equal(logged[0].failureCode, 'led_overcurrent');
-  assert.equal(rows[0].row.component_ref, undefined);
-});
-
-test('render state carries the lamp and the exercise check', async () => {
-  const { rt, rendered } = runtime();
-  rt.start({ sessionId: 's1' });
-  rt.place(readCase('fixtures/placements/tp1_all_330.json').frames);
-  const result = JSON.parse(readFileSync(path('fixtures/expected/tp1_all_330.result.json'), 'utf8'));
+  const result = JSON.parse(readFileSync(path('fixtures/expected/tp1_r_220.result.json'), 'utf8'));
   rt.apply(result);
-  const last = rendered.at(-1);
-  assert.equal(last.components.LED1.state, 'on');
-  assert.equal(last.scenarioCheck.completed, true);
-  assert.equal(last.stale, false);
+  assert.equal(logged.some((event) => event.type === 'failure_caused'), false);
+  const snapshot = logged.find((event) => event.type === 'sim_result');
+  assert.equal(snapshot.payload.source, 'student_client_unverified');
+  assert.equal(snapshot.payload.messages[0].code, 'LED_OVERCURRENT');
 });
 
-test('a stale result is marked, not silently shown as fresh', () => {
-  const { rt, rendered } = runtime();
+test('failure candidates are edge-triggered and can recur after recovery', () => {
+  const { rt } = runtime();
   rt.start({ sessionId: 's1' });
-  rt.place(readCase('fixtures/placements/tp1_all_330.json').frames);
-  rt.apply({ status: 'ok', messages: [], components: {}, stale: true });
+  const failed = {
+    status: 'warning',
+    messages: [{ code: 'LED_OVERCURRENT', severity: 'warning', component: 'LED1', text: 'burned' }],
+    components: { LED1: { state: 'burned' } },
+  };
+  assert.equal(rt.apply(failed).rows.filter(({ row }) => row.event_type === 'failure_caused').length, 1);
+  assert.equal(rt.apply(failed).rows.filter(({ row }) => row.event_type === 'failure_caused').length, 0);
+  rt.apply({ status: 'ok', messages: [], components: { LED1: { state: 'on' } } });
+  assert.equal(rt.apply(failed).rows.filter(({ row }) => row.event_type === 'failure_caused').length, 1);
+});
+
+test('stale results are rendered but never persisted', () => {
+  const { rt, logged, rendered } = runtime();
+  rt.start({ sessionId: 's1' });
+  rt.apply({
+    status: 'warning', stale: true,
+    messages: [{ code: 'LED_OVERCURRENT', severity: 'warning', component: 'LED1', text: 'burned' }],
+    components: { LED1: { state: 'burned' } },
+  });
+  assert.equal(logged.length, 0);
   assert.equal(rendered.at(-1).stale, true);
+});
+
+test('snapshot writes are throttled even when values keep changing', () => {
+  let clock = 10000;
+  const { rt, logged } = runtime({ nowMs: () => clock });
+  rt.start({ sessionId: 's1' });
+  rt.apply({ status: 'ok', messages: [], components: { LED1: { state: 'on', current_a: 0.01 } } });
+  clock += 100;
+  rt.apply({ status: 'ok', messages: [], components: { LED1: { state: 'on', current_a: 0.02 } } });
+  assert.equal(logged.filter((event) => event.type === 'sim_result').length, 1);
+  clock += 2100;
+  rt.apply({ status: 'ok', messages: [], components: { LED1: { state: 'on', current_a: 0.03 } } });
+  assert.equal(logged.filter((event) => event.type === 'sim_result').length, 2);
 });
 
 test('end() stops the client', async () => {

@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 import api  # noqa: E402
 
 
@@ -23,10 +22,12 @@ def base_url():
     httpd.server_close()
 
 
-def call(base, path, payload=None, method=None):
+def call(base, path, payload=None, method=None, headers=None):
     data = json.dumps(payload).encode() if payload is not None else None
-    req = urllib.request.Request(base + path, data=data, method=method or ("POST" if data else "GET"),
-                                 headers={"content-type": "application/json"})
+    request_headers = {"content-type": "application/json", **(headers or {})}
+    req = urllib.request.Request(base + path, data=data,
+                                 method=method or ("POST" if data else "GET"),
+                                 headers=request_headers)
     try:
         with urllib.request.urlopen(req, timeout=5) as res:
             return res.status, json.loads(res.read().decode())
@@ -35,9 +36,7 @@ def call(base, path, payload=None, method=None):
 
 
 def netlist(**kw):
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    import json as _json
-    data = _json.loads((Path(__file__).resolve().parent.parent / "data" / "netlist_ex1_led.json").read_text())
+    data = json.loads((Path(__file__).resolve().parent.parent / "data" / "netlist_ex1_led.json").read_text())
     data.update(kw)
     return data
 
@@ -104,3 +103,20 @@ def test_sessions_are_isolated(base_url):
     for i, sid in enumerate(ids):
         _, res = call(base_url, "/v1/simulate", {"session_id": sid, "netlist": good})
         assert res["components"]["LED1"]["state"] == "on"
+
+
+def test_bearer_token_is_required_when_configured(base_url, monkeypatch):
+    monkeypatch.setattr(api, "API_TOKEN", "test-secret")
+    status, body = call(base_url, "/v1/health")
+    assert status == 401 and body["error"]["code"] == "UNAUTHORIZED"
+    status, body = call(base_url, "/v1/health", headers={"authorization": "Bearer test-secret"})
+    assert status == 200 and body["ok"] is True
+
+
+def test_per_ip_rate_limit_has_a_sliding_window(monkeypatch):
+    monkeypatch.setattr(api, "RATE_LIMIT_MAX_REQUESTS", 2)
+    api.RATE_LIMITS.clear()
+    assert api.allow_request("unit-test-client", now=100.0) is True
+    assert api.allow_request("unit-test-client", now=101.0) is True
+    assert api.allow_request("unit-test-client", now=102.0) is False
+    assert api.allow_request("unit-test-client", now=161.1) is True
