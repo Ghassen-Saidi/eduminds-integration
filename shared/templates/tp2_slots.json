@@ -16,32 +16,28 @@
     {
       "instance": "BAT1",
       "accepts": [
-        "CMP063"
+        "CMP059"
       ],
-      "x": 0.28,
-      "y": 0.36,
+      "x": 0.22,
+      "y": 0.34,
       "theta_deg": 0
     },
     {
-      "instance": "R1",
+      "instance": "REG1",
       "accepts": [
-        "CMP003",
-        "CMP004",
-        "CMP005"
+        "CMP065"
       ],
-      "x": 0.62,
-      "y": 0.36,
+      "x": 0.55,
+      "y": 0.34,
       "theta_deg": 0
     },
     {
-      "instance": "R2",
+      "instance": "POT1",
       "accepts": [
-        "CMP003",
-        "CMP004",
-        "CMP005"
+        "CMP011"
       ],
-      "x": 0.62,
-      "y": 0.66,
+      "x": 0.78,
+      "y": 0.55,
       "theta_deg": 0
     },
     {
@@ -49,8 +45,8 @@
       "accepts": [
         "CMP083"
       ],
-      "x": 0.28,
-      "y": 0.66,
+      "x": 0.35,
+      "y": 0.72,
       "theta_deg": 0
     }
   ],
@@ -59,21 +55,27 @@
       "id": "N1",
       "connections": [
         "BAT1.pos",
-        "R1.a"
+        "REG1.vin"
       ]
     },
     {
       "id": "N2",
       "connections": [
-        "R1.b",
-        "R2.a",
+        "REG1.vout",
+        "POT1.a"
+      ]
+    },
+    {
+      "id": "N3",
+      "connections": [
+        "POT1.b",
         "SENSOR1.pos"
       ]
     },
     {
       "id": "GND",
       "connections": [
-        "R2.b",
+        "REG1.gnd",
         "SENSOR1.neg",
         "BAT1.neg",
         "GND1.gnd"
