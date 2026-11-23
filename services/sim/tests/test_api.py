@@ -236,3 +236,37 @@ def test_persistent_failures_are_signed_once_and_can_recur_after_recovery(base_u
         assert captured[1][0]["code"] == "LED_OVERCURRENT"
     finally:
         api.SESSIONS.pop(sid, None)
+
+
+
+def test_failure_retries_signing_when_secret_is_configured_later(base_url, monkeypatch):
+    app_session = "00000000-0000-4000-8000-000000000123"
+    attempts = []
+
+    def delayed_attestation(**kwargs):
+        attempts.append(kwargs["result"]["messages"])
+        if len(attempts) == 1:
+            return None
+        return {"payload": {"run_id": str(len(attempts))}, "signature": "a" * 64}
+
+    class RepeatedFailureSession:
+        def update(self, _netlist):
+            return {"status": "warning", "messages": [{"code": "LED_OVERCURRENT", "component": "LED1"}]}
+
+    monkeypatch.setattr(api, "create_attestation", delayed_attestation)
+    _, session = call(base_url, "/v1/session", {
+        "scenario": "ex1_led_series",
+        "application_session_id": app_session,
+    })
+    sid = session["session_id"]
+    api.SESSIONS[sid]["session"] = RepeatedFailureSession()
+    try:
+        _, first = call(base_url, "/v1/simulate", {"session_id": sid, "netlist": netlist()})
+        _, second = call(base_url, "/v1/simulate", {"session_id": sid, "netlist": netlist()})
+        _, third = call(base_url, "/v1/simulate", {"session_id": sid, "netlist": netlist()})
+        assert "attestation" not in first
+        assert "attestation" in second
+        assert "attestation" not in third
+        assert len(attempts) == 2
+    finally:
+        api.SESSIONS.pop(sid, None)
