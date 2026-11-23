@@ -88,18 +88,21 @@ const camera = startCameraLoop({
 // startLab: camera.start();   stopLab: camera.stop();
 ```
 
-`onFrames` receives the **window** of the last five sighting frames. The loop
-enforces the phone budget — detection on every second camera frame, at most
-10 detections per second — and `runtime.place(window)` runs the 3-of-5 debounce,
-the slot matching, the netlist build and the event mapping. Each entry is
-`{markerId, x, y, theta_deg}` in mat coordinates.
+`onFrames` receives the **window** of the last five sampled detections.
+When the mat is missing, the pump appends an empty frame (`[]`) and still
+calls `onFrames`; three misses age the old placement out of the 3-of-5
+debounce. The loop enforces the phone budget — detection on every second
+camera frame, at most 10 detections per second — and
+`runtime.place(window)` runs the debounce, slot matching, netlist build and
+event mapping. Each sighting entry is `{markerId, x, y, theta_deg}` in mat
+coordinates.
 
-One frame can never satisfy the debounce, so never call `place([frame])` once
-per camera frame unless you keep your own history — the runtime accepts a
-single frame too (`place([frame])` per processed frame) and keeps its own
-five-frame window, but then it must also be told when the mat is gone:
-`place([])` per missed detection, which ages the window out. Pick one of the
-two styles; the demo page uses the window style plus `place([])` on mat loss.
+Use one history owner. When using `createVisionPump`, do not also call
+`runtime.place([])` from `onMat`: every sampled miss is already delivered
+through `onFrames`. Calling it twice desynchronizes the pump and runtime
+histories. A single-frame integration that owns no pump may instead call
+`runtime.place([frame])` for each sampled frame and `runtime.place([])`
+for each sampled miss.
 
 ## 5. `stopLab`
 
