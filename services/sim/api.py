@@ -27,6 +27,7 @@ stale result instead of wiping the screen.
 """
 import argparse
 import hmac
+import ipaddress
 import json
 import mimetypes
 import os
@@ -157,6 +158,10 @@ class Handler(BaseHTTPRequestHandler):
         self._send(status, {"error": {"code": code, "message": message}})
 
     def _access_error(self):
+        # All protected API traffic participates in expiry cleanup, not just
+        # POST requests. Otherwise idle sessions and per-IP buckets can linger
+        # indefinitely when a client only polls health or deletes sessions.
+        purge()
         if API_TOKEN and not hmac.compare_digest(
             self.headers.get("Authorization", ""), "Bearer " + API_TOKEN
         ):
@@ -217,7 +222,6 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self._access_error():
             return
-        purge()
         body, error, status = self._body()
         if error:
             return self._error(status, "BAD_BODY", error)
@@ -249,7 +253,11 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     result = dict(simulate(body["netlist"]), session_missing=True)
             except Exception as exc:
-                return self._error(500, "ENGINE_ERROR", repr(exc))
+                # Keep diagnostics in the server log; never echo internal
+                # exception text (which may include identifiers or secrets) to
+                # an untrusted browser client.
+                sys.stderr.write("simulator engine error: %r\\n" % exc)
+                return self._error(500, "ENGINE_ERROR", "simulation failed")
             return self._send(200, result)
         return self._error(404, "NOT_FOUND", "no such route")
 
@@ -265,7 +273,24 @@ class Handler(BaseHTTPRequestHandler):
         return self._error(404, "NOT_FOUND", "no such route")
 
 
+def validate_bind(host, api_token=None):
+    """Require a bearer-protected reverse proxy before listening off-loopback."""
+    token = API_TOKEN if api_token is None else api_token
+    if str(host).lower() == "localhost":
+        return
+    try:
+        loopback = ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        loopback = False
+    if not loopback and not token:
+        raise ValueError(
+            "refusing non-loopback bind without EDUMINDS_API_TOKEN; "
+            "use loopback or configure an authenticated reverse proxy"
+        )
+
+
 def make_server(host="127.0.0.1", port=8000):
+    validate_bind(host, API_TOKEN)
     return ThreadingHTTPServer((host, port), Handler)
 
 
@@ -280,7 +305,10 @@ def main():
     parser.add_argument("--key", default="certs/dev-key.pem", help="TLS private key (PEM)")
     args = parser.parse_args()
     SERVE_DEMO = args.demo
-    server = make_server(args.host, args.port)
+    try:
+        server = make_server(args.host, args.port)
+    except ValueError as exc:
+        parser.error(str(exc))
     scheme = "http"
     if args.tls:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
