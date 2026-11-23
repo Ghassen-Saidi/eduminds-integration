@@ -97,6 +97,7 @@ begin
       from public.sessions s
       join public.labs l on l.id = s.lab_id
      where s.id = p_session_id
+       and s.ended_at is null
        and l.scenario = p_scenario
   ) then
     raise exception 'simulator scenario does not match the database session' using errcode = '23514';
