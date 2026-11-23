@@ -256,7 +256,7 @@ class Handler(BaseHTTPRequestHandler):
                 # Keep diagnostics in the server log; never echo internal
                 # exception text (which may include identifiers or secrets) to
                 # an untrusted browser client.
-                sys.stderr.write("simulator engine error: %r\\n" % exc)
+                sys.stderr.write("simulator engine error: %r\n" % exc)
                 return self._error(500, "ENGINE_ERROR", "simulation failed")
             return self._send(200, result)
         return self._error(404, "NOT_FOUND", "no such route")
