@@ -1,5 +1,5 @@
 -- 0005 — restrict student-controlled columns and establish a trusted simulator attestation path.
--- Apply only after 0001_rebuild, 0002_sim_state and 0003_secure_telemetry.
+-- Apply only after 0001_rebuild, 0002_sim_state, 0003_secure_telemetry and 0004_tp2_sensor.
 -- This migration intentionally does not assign students to classes; a trusted
 -- teacher/admin workflow must populate students.class_name and teacher_classes.
 
