@@ -47,7 +47,7 @@
     {
       "instance": "SENSOR1",
       "accepts": [
-        "CMP070"
+        "CMP083"
       ],
       "x": 0.28,
       "y": 0.66,
