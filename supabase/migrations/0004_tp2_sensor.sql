@@ -12,5 +12,5 @@ insert into components (ref, name_fr, category, unit_price_tnd) values
 on conflict (ref) do nothing;
 
 -- the failure now has a part to price in failures_prevented
-update failure_types set component_ref = 'CMP070'
+update failure_types set component_ref = 'CMP083'
  where code = 'sensor_overvoltage' and component_ref is null;
