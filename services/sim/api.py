@@ -296,9 +296,9 @@ class Handler(BaseHTTPRequestHandler):
                         result["attestation"] = attestation
                         entry["active_failure_keys"] = current_failures
                 else:
-                    # Also age cleared failures out so a later recurrence can
-                    # be signed. If signing is not configured, retain the prior
-                    # set so the active fault is retried on the next update.
+                    # Age cleared failures out so a later recurrence can be
+                    # signed. If this result has no new failure messages, there
+                    # is nothing to retry on the next camera update.
             return self._send(200, result)
         return self._error(404, "NOT_FOUND", "no such route")
 
