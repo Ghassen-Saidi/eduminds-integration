@@ -1,0 +1,70 @@
+{
+  "schema_version": "0.2",
+  "scenario": "ex4_divider_sensor",
+  "domain": "analog",
+  "components": [
+    {
+      "id": "GND1",
+      "type": "ground",
+      "params": {}
+    },
+    {
+      "id": "BAT1",
+      "type": "battery",
+      "params": {
+        "voltage": 9
+      }
+    },
+    {
+      "id": "R1",
+      "type": "resistor",
+      "params": {
+        "resistance": 1000,
+        "power_rating_w": 0.25
+      }
+    },
+    {
+      "id": "R2",
+      "type": "resistor",
+      "params": {
+        "resistance": 330,
+        "power_rating_w": 0.25
+      }
+    },
+    {
+      "id": "SENSOR1",
+      "type": "sensor_3v3",
+      "params": {
+        "max_voltage": 3.3,
+        "min_voltage": 2,
+        "input_resistance": 100000
+      }
+    }
+  ],
+  "nets": [
+    {
+      "id": "N1",
+      "connections": [
+        "BAT1.pos",
+        "R1.a"
+      ]
+    },
+    {
+      "id": "N2",
+      "connections": [
+        "R1.b",
+        "R2.a",
+        "SENSOR1.pos"
+      ]
+    },
+    {
+      "id": "GND",
+      "connections": [
+        "R2.b",
+        "SENSOR1.neg",
+        "BAT1.neg",
+        "GND1.gnd"
+      ]
+    }
+  ]
+}

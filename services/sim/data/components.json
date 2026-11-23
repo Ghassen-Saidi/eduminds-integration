@@ -151,6 +151,18 @@
         "cols": 16,
         "rows": 2
       }
+    },
+    "sensor_3v3": {
+      "marker_id": 24,
+      "terminals": [
+        "pos",
+        "neg"
+      ],
+      "defaults": {
+        "max_voltage": 3.3,
+        "min_voltage": 2.0,
+        "input_resistance": 100000
+      }
     }
   }
 }

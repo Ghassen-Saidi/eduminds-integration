@@ -3,7 +3,7 @@
 ## Once, the day before
 
 1. `npm install` in this repo and in `edu-minds-app`.
-2. Print `assets/print/mat-tp1.png` on **A3 landscape, 100 % scale, no fit-to-page**, on matte paper, and `assets/print/tokens.png` on A4 thick paper; glue the tokens to card so they lie flat. The mat is A3 because four 45 mm tokens do not fit an A4 sheet beside four 60 mm corner markers.
+2. Print `assets/print/mat-tp1.png` and `mat-tp2.png` on **A3 landscape, 100 % scale, no fit-to-page**, on matte paper, and `assets/print/tokens.png` on A4 thick paper; glue the tokens to card so they lie flat. The mat is A3 because four 45 mm tokens do not fit an A4 sheet beside four 60 mm corner markers. TP 3 uses `mat-tp3.png` if it is on the script.
 3. Check the print: run `npm test` — the marker tests decode the very files you printed.
 4. Laptop and phone on the same Wi-Fi. Note the laptop's LAN IP.
 
@@ -18,12 +18,13 @@ bash tools/make-cert.sh        # once: self-signed certificate for HTTPS
 npm run demo:tls               # https://<LAN-IP>:8443 — open it on the phone
 ```
 
-Accept the certificate warning once, allow the camera, pick TP 1 and point the
+Accept the certificate warning once, allow the camera, pick a TP and point the
 phone at the whole mat. The page shows the four corner quad, the slot rings,
-which parts it has placed, the lamp and the simulator's messages; a "sim
-offline" chip means the page is still usable with the last result. `npm run
-check:demo` proves the same path headlessly (3 composed frames → LED on at
-21.15 mA, exercise complete) so a broken network shows up before the phone
+which parts it has placed, the lamp (or the sensor voltage on TP 2) and the
+simulator's messages; a "sim offline" chip means the page is still usable with
+the last result. `npm run check:demo` proves the same path headlessly (3
+composed frames → LED on at 21.15 mA for TP 1, sensor powered at 2.23 V for
+TP 2, both exercises complete) so a broken network shows up before the phone
 does.
 
 ## Every run
@@ -48,6 +49,10 @@ allow camera and motion.
 5. Ask the teacher screen for `failures_prevented` — one red LED, 0.50 TND saved.
 6. Flip the LED token: "wrong way round". Flip it back.
 7. Use the open-switch token: lamp off, no failure.
+8. Optional TP 2: switch the lab, put the 1 kΩ token in R1 and the 330 Ω one in R2
+   (battery, sensor across R2). The sensor reads 2.23 V and the exercise completes.
+   Swap R2 for the 220 Ω token to show "underpowered", or R1 for 220 Ω to show
+   "destroyed" — that is the divider arithmetic made visible.
 
 ## If it breaks
 

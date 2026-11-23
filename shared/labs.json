@@ -10,6 +10,14 @@
       "template": "tp1_slots.json"
     },
     {
+      "id": 2,
+      "code": "divider_sensor",
+      "scenario": "ex4_divider_sensor",
+      "title_fr": "TP 2 · Diviseur + capteur 3,3 V",
+      "sub_fr": "Diviseur de tension : alimenter un capteur 3,3 V depuis 9 V",
+      "template": "tp2_slots.json"
+    },
+    {
       "id": 3,
       "code": "diode_buzzer",
       "scenario": "ex2_diode_buzzer",

@@ -125,6 +125,9 @@ function startRuntime() {
       state.mat = mat;
       el('mat').className = 'chip ' + (mat.found ? 'ok' : 'warn');
       el('mat').textContent = mat.found ? 'plateau : détecté' : 'plateau : montrez les 4 coins';
+      // Mat lost: an empty frame ages the runtime's window, so a board that is
+      // really gone clears after 3 missed detections (one bad frame cannot).
+      if (!mat.found) state.runtime?.place([]);
       drawOverlay();
     },
     onFrames: (window) => {
@@ -197,11 +200,19 @@ function render(renderState = {}) {
     ? parts.map((c) => `<li class="part"><b>${c.id}</b> · ${c.type}${fmtParams(c.params)}</li>`).join('')
     : '<li class="muted">—</li>';
 
-  const led = state.lastResult?.components?.LED1 ?? renderState.components?.LED1;
+  const components = renderState.components ?? state.lastResult?.components ?? {};
+  const led = components.LED1;
+  const sensor = components.SENSOR1;
   const bulb = el('bulb');
-  bulb.className = 'bulb' + (led?.state === 'on' ? ' on' : led?.state === 'burned' ? ' burned' : '');
-  el('bulbState').textContent = led ? `LED1 : ${led.state}` : 'rien sur le plateau';
-  el('bulbCurrent').textContent = led?.current_a != null ? `${(led.current_a * 1000).toFixed(1)} mA` : '';
+  if (sensor) {
+    bulb.className = 'bulb' + (sensor.state === 'powered' ? ' on' : sensor.state === 'destroyed' ? ' burned' : '');
+    el('bulbState').textContent = `SENSOR1 : ${sensor.state}`;
+    el('bulbCurrent').textContent = sensor.voltage_v != null ? `${sensor.voltage_v.toFixed(2)} V` : '';
+  } else {
+    bulb.className = 'bulb' + (led?.state === 'on' ? ' on' : led?.state === 'burned' ? ' burned' : '');
+    el('bulbState').textContent = led ? `LED1 : ${led.state}` : 'rien sur le plateau';
+    el('bulbCurrent').textContent = led?.current_a != null ? `${(led.current_a * 1000).toFixed(1)} mA` : '';
+  }
 
   const messages = (renderState.messages ?? state.lastResult?.messages ?? []);
   el('messages').innerHTML = messages.length

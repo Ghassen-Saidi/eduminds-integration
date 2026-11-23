@@ -96,6 +96,7 @@ async function mat(templateFile, outName, title) {
 (async () => {
   const n = await tokenSheet();
   const c1 = await mat('tp1_slots.json', 'mat-tp1.png', 'EduMinds Mat — TP 1 · LED + résistance');
+  const c2 = await mat('tp2_slots.json', 'mat-tp2.png', 'EduMinds Mat — TP 2 · Diviseur + capteur 3,3 V');
   const c3 = await mat('tp3_slots.json', 'mat-tp3.png', 'EduMinds Mat — TP 3 · Diode + buzzer');
-  console.log(`tokens: ${n}, mat corners: ${c1} / ${c3}`);
+  console.log(`tokens: ${n}, mat corners: ${c1} / ${c2} / ${c3}`);
 })().catch((e) => { console.error(e); process.exit(1); });
