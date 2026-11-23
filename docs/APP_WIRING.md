@@ -79,9 +79,9 @@ detectCanvas.height = 360;
 
 const camera = startCameraLoop({
   video, canvas: detectCanvas, vision,
-  onFrames: (window) => runtime?.place(window),     // the rolling window, see below
+  onFrames: (window) => runtime?.place(window),     // includes [] frames while the mat is missing
   onMat: (mat) => {
-    if (!mat.found) { showMatHint('montrez les quatre coins'); runtime?.place([]); }
+    if (!mat.found) showMatHint('montrez les quatre coins');
   },
 });
 
