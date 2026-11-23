@@ -159,3 +159,38 @@ def test_engine_errors_do_not_leak_internal_exception_text(base_url):
         assert "sensitive-internal-detail" not in json.dumps(body)
     finally:
         api.SESSIONS.pop(sid, None)
+
+
+
+def test_application_session_id_must_be_a_uuid(base_url):
+    status, body = call(base_url, "/v1/session", {
+        "scenario": "ex1_led_series",
+        "application_session_id": "not-a-uuid",
+    })
+    assert status == 422
+    assert body["error"]["code"] == "INVALID_APPLICATION_SESSION"
+
+
+def test_signed_attestation_is_attached_only_to_bound_app_session(base_url, monkeypatch):
+    app_session = "00000000-0000-4000-8000-000000000123"
+    captured = {}
+
+    def fake_attestation(**kwargs):
+        captured.update(kwargs)
+        return {"payload": {"application_session_id": app_session}, "signature": "a" * 64}
+
+    monkeypatch.setattr(api, "create_attestation", fake_attestation)
+    status, session = call(base_url, "/v1/session", {
+        "scenario": "ex1_led_series",
+        "application_session_id": app_session,
+    })
+    assert status == 200
+    status, result = call(base_url, "/v1/simulate", {
+        "session_id": session["session_id"],
+        "netlist": netlist(),
+    })
+    assert status == 200
+    assert result["attestation"]["payload"]["application_session_id"] == app_session
+    assert captured["application_session_id"] == app_session
+    assert captured["sim_session_id"] == session["session_id"]
+    api.SESSIONS.pop(session["session_id"], None)
