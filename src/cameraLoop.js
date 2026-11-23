@@ -26,7 +26,7 @@ export const WINDOW_FRAMES = 5;
 /**
  * @param {object}  opts
  * @param {object}  opts.vision            createVision(...) result
- * @param {Function} opts.onFrames         called with ([...frames], sighting) once per detection that found the mat
+ * @param {Function} opts.onFrames         called with the rolling window on every sampled detection, including an empty frame when the mat is missing
  * @param {Function} [opts.onMat]          called with the mat result of every sampled frame (found or not)
  * @param {number}  [opts.everyNFrames]    sample every Nth camera frame (default 2)
  * @param {number}  [opts.minIntervalMs]   minimum spacing between two detections (default 100 ms => 10 fps)
@@ -70,17 +70,16 @@ export function createVisionPump({
       const sighting = vision.frameFromImage(image);
       const matFound = Boolean(sighting && sighting.mat && sighting.mat.found);
       onMat({ ...(sighting?.mat ?? { found: false }), markers: sighting?.markers ?? [] }, { timestamp, detected });
-      if (!matFound) {
-        // The mat is out of view: keep the window as it is and send nothing.
-        // Clearing it here would let a single bad frame empty the student's board.
-        return { sampled: true, detected: true, matFound: false, sent: null };
-      }
-
-      window.push(sighting.frame ?? []);
+      // Every sampled detection contributes to the same history. A missed mat
+      // contributes an empty frame: one miss cannot clear a stable placement,
+      // but three misses in the 3-of-5 window age it out. Sending this updated
+      // window also prevents pre-loss sightings being replayed when the mat
+      // returns after the runtime has already processed missing frames.
+      window.push(matFound ? (sighting.frame ?? []) : []);
       if (window.length > windowFrames) window = window.slice(-windowFrames);
       const sent = window.slice();
       onFrames(sent, sighting);
-      return { sampled: true, detected: true, matFound: true, sent };
+      return { sampled: true, detected: true, matFound, sent };
     },
 
     /** Forget what was on the mat (called when a lab starts or stops). */

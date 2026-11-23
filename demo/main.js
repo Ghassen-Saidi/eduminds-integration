@@ -34,6 +34,7 @@ const state = {
   slots: [],
   detections: 0,
   lastResult: null,
+  statsTimer: null,
 };
 
 async function boot() {
@@ -62,6 +63,10 @@ async function loadLab(id) {
 
 async function start() {
   try {
+    state.mat = null;
+    state.slots = [];
+    state.lastResult = null;
+    render({ components: {}, messages: [] });
     await loadLab(el('lab').value);
     state.stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -79,6 +84,15 @@ async function start() {
     el('hint').className = 'hidden';
     startRuntime();
   } catch (err) {
+    state.loop?.stop();
+    state.loop = null;
+    await state.runtime?.end();
+    state.runtime = null;
+    state.client = null;
+    for (const track of state.stream?.getTracks() ?? []) track.stop();
+    state.stream = null;
+    el('start').disabled = false;
+    el('stop').disabled = true;
     showHint(`Caméra indisponible : ${err.message}. Sur un téléphone il faut une page HTTPS (lancez le service avec --tls).`);
   }
 }
@@ -125,9 +139,9 @@ function startRuntime() {
       state.mat = mat;
       el('mat').className = 'chip ' + (mat.found ? 'ok' : 'warn');
       el('mat').textContent = mat.found ? 'plateau : détecté' : 'plateau : montrez les 4 coins';
-      // Mat lost: an empty frame ages the runtime's window, so a board that is
-      // really gone clears after 3 missed detections (one bad frame cannot).
-      if (!mat.found) state.runtime?.place([]);
+      // The camera pump sends an empty frame through onFrames for each missed
+      // detection. Do not call runtime.place([]) here as well: that would age
+      // the runtime twice and desynchronise it from the pump's rolling window.
       drawOverlay();
     },
     onFrames: (window) => {
@@ -156,7 +170,8 @@ function startRuntime() {
     },
   };
 
-  setInterval(() => {
+  if (state.statsTimer !== null) clearInterval(state.statsTimer);
+  state.statsTimer = setInterval(() => {
     el('fps').textContent = `${state.detections} détections`;
     state.detections = 0;
   }, 1000);
@@ -175,6 +190,8 @@ async function restart() {
 
 async function stop() {
   state.loop?.stop();
+  if (state.statsTimer !== null) clearInterval(state.statsTimer);
+  state.statsTimer = null;
   state.loop = null;
   await state.runtime?.end();
   state.runtime = null;

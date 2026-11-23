@@ -18,13 +18,15 @@ const byMarker = tokensByMarker(parseTokens(readFileSync(path('shared/components
 const vision = createVision({ Detector: AR.Detector });
 
 /** A detector stub that answers without pixels. */
-function stubVision(matFound) {
+function stubVision(matFound, tokenFrame = [{ markerId: 4, x: 0.62, y: 0.66, theta_deg: 0 }]) {
   const calls = { frames: 0 };
+  let found = matFound;
   return {
     calls,
+    setMatFound(value) { found = value; },
     frameFromImage() {
       calls.frames += 1;
-      return { mat: { found: matFound }, markers: [], frame: matFound ? [{ markerId: 4, x: 0.62, y: 0.66, theta_deg: 0 }] : [] };
+      return { mat: { found }, markers: [], frame: found ? tokenFrame : [] };
     },
   };
 }
@@ -49,15 +51,18 @@ test('the pump detects on every second frame and never faster than 10 Hz', () =>
   assert.equal(pump.stats.framesSeen, pushed);
 });
 
-test('a mat out of view sends nothing and keeps the window', () => {
-  const v = stubVision(false);
+test('a missing mat contributes an empty frame without immediately clearing history', () => {
+  const v = stubVision(true);
   const sent = [];
   const pump = createVisionPump({ vision: v, onFrames: (w) => sent.push(w), minIntervalMs: 0, everyNFrames: 1 });
-  const out = pump.push({}, 0);
+  pump.push({}, 0);
+  v.setMatFound(false);
+  const out = pump.push({}, 10);
   assert.equal(out.matFound, false);
-  assert.equal(out.sent, null);
-  assert.deepEqual(sent, []);
-  assert.deepEqual(pump.window, []);
+  assert.deepEqual(out.sent.at(-1), []);
+  assert.equal(sent.length, 2, 'the runtime receives each sampled detection');
+  assert.equal(pump.window.length, 2);
+  assert.deepEqual(pump.window.at(-1), []);
 });
 
 test('the rolling window is what the runtime receives, capped at five frames', () => {
@@ -104,6 +109,41 @@ test('three camera frames of the real mat become a four-token netlist (no camera
   const ids = placed.components.map((c) => c.id).sort();
   assert.deepEqual(ids, ['BAT1', 'GND1', 'LED1', 'R1', 'SW1']);
   assert.equal(updates.length, 3, 'every detection reached the debounced client');
+});
+
+
+test('mat loss ages runtime history and a returning mat cannot resurrect stale placements', () => {
+  const ledSlot = tp1.slots.find((slot) => slot.instance === 'LED1');
+  const tokenFrame = [{ markerId: 4, x: ledSlot.x, y: ledSlot.y, theta_deg: 0 }];
+  const v = stubVision(true, tokenFrame);
+  const runtime = createLabRuntime({
+    template: tp1, byMarker, mapping,
+    client: { update: () => {}, stop: () => {} },
+    logEvent: () => {}, uuid: () => 'uuid',
+  });
+  const pump = createVisionPump({
+    vision: v, minIntervalMs: 0, everyNFrames: 1,
+    onFrames: (window) => runtime.place(window),
+  });
+  const ids = () => runtime.lastNetlist.components.map((c) => c.id).sort();
+
+  pump.push({}, 0);
+  pump.push({}, 50);
+  pump.push({}, 100);
+  assert.ok(ids().includes('LED1'), 'three detections stabilise the LED');
+
+  v.setMatFound(false);
+  pump.push({}, 150);
+  pump.push({}, 200);
+  pump.push({}, 250);
+  assert.deepEqual(ids(), ['GND1'], 'three empty detections age the LED out');
+
+  v.setMatFound(true);
+  pump.push({}, 300);
+  assert.deepEqual(ids(), ['GND1'], 'one returning sighting must not replay stale frames');
+  pump.push({}, 350);
+  pump.push({}, 400);
+  assert.ok(ids().includes('LED1'), 'three new detections stabilise the returning LED');
 });
 
 test('one frame is not enough to place a component (the debounce is real)', async () => {
