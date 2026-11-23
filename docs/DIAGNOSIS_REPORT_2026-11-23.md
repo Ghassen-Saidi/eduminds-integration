@@ -12,7 +12,7 @@ The current integration and TP2 branches have successful GitHub Actions runs on 
 
 This follow-up identified and is correcting a camera history defect that can restore stale placements after the mat re-enters the camera view, plus three simulator service issues: incomplete expiry cleanup, unsafe non-loopback binding without authentication, and leaking raw engine exception details to API clients. A separate demo lifecycle leak (an interval retained after each stop/restart) is also being corrected.
 
-The diagnostic branch is isolated from the two existing PRs. The new follow-up CI result is pending; this report deliberately does not claim its new tests have passed yet.
+The diagnostic branch is isolated from the two existing PRs and is tracked by [PR #3](https://github.com/Ghassen-Saidi/eduminds-integration/pull/3), targeting the TP2 branch. Its latest push workflow (run #45) completed successfully: 84 Python tests, 81 Node tests, and the TP1+TP2 demo integration check passed.
 
 ## 1. Repository and PR state verified
 
@@ -23,7 +23,7 @@ The diagnostic branch is isolated from the two existing PRs. The new follow-up C
 | PR #2 | `feat/tp2-sensor-3v3` → `integration/2026-11-23`, open |
 | PR #1 latest head | `6589e35d415c24e002afbec6276bba1d3c9ed86f` |
 | PR #2 latest head | `e4b31a8b2dd918687b125239dac7538ba15a3e72` |
-| Follow-up branch | `fix/post-tp2-diagnostics-2026-11-23`, created from TP2 head |
+| Follow-up branch | `fix/post-tp2-diagnostics-2026-11-23`, created from TP2 head; [PR #3](https://github.com/Ghassen-Saidi/eduminds-integration/pull/3) open |
 | Latest CI for PR #1 | run #32, success |
 | Latest CI for PR #2 | run #34, success |
 | Reviews on PR #1/#2 | none returned by GitHub at inspection time |
@@ -112,6 +112,6 @@ The migrations in the repository were reviewed, but no database migration was ap
 
 **Existing branches:** current GitHub Actions PR runs #32 and #34 succeeded. The 150/161 test counts come from the repository's previous clean-clone report.
 
-**This follow-up branch:** new regression tests have been added. Its CI is not yet confirmed by this report. Do not merge the follow-up PR until the new GitHub Actions run passes.
+**This follow-up branch:** GitHub Actions run #45 on head `f362f4bfda67919ea24565186eb5b0189a5748b0` succeeded. It reported 84 Python tests passed, 81 Node tests passed (0 failed), and `npm run check:demo` passed. The demo exercised both TP1 (LED on at 21.15 mA, completed) and TP2 (sensor powered at 2.2276 V, completed). No physical camera rehearsal is implied by this automated frame-fixture test.
 
 **Not verified here:** real phone/camera operation, physical print scale/glare, real sensor characteristics, active Supabase schema or migration state, and end-to-end app wiring into the student-app repository.
