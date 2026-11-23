@@ -61,33 +61,33 @@ export function startSim(lab) {
 
 // Vision: one call per processed camera frame, no rendering involved.
 import { createVision } from '../../eduminds-integration/src/vision.js';
+import { startCameraLoop } from '../../eduminds-integration/src/cameraLoop.js';
 import { AR } from 'js-aruco2';                    // the library the vision prototype already uses
 
 const vision = createVision({ Detector: AR.Detector });
 const detectCanvas = document.createElement('canvas');     // 640x360, downscaled
-const detectCtx = detectCanvas.getContext('2d', { willReadFrequently: true });
+detectCanvas.width = 640;
+detectCanvas.height = 360;
 
-export function onCameraFrame(video) {
-  detectCtx.drawImage(video, 0, 0, detectCanvas.width, detectCanvas.height);
-  const image = detectCtx.getImageData(0, 0, detectCanvas.width, detectCanvas.height);
-  const { mat, frame } = vision.frameFromImage(image);
-  if (!mat.found) { showMatHint('show the four corner markers'); return; }
-  runtime?.place([frame]);          // push this frame's sightings into the 3-of-5 debounce
-}
+// The loop keeps the rolling window perception.js needs and enforces the
+// detection budget (every 2nd frame, at most 10 detections per second).
+const camera = startCameraLoop({
+  video, canvas: detectCanvas, vision,
+  onFrames: (window) => runtime?.place(window),
+  onMat: (mat) => { if (!mat.found) showMatHint('show the four corner markers'); },
+});
 
-// Call this from the vision module for every processed camera frame.
-export function onMarkerFrames(frames) {
-  runtime?.place(frames);                   // frames = [[{markerId,x,y,theta_deg}, ...], ...]
-}
-
+// startLab: camera.start();   stopLab: camera.stop();
 // In the client that receives the simulation result (poll or callback):
 export function onSimResult(result) { runtime?.apply(result); }
 ```
 
-`frames` is the vision module's output: one array per processed frame, each
-entry a detected token with normalized mat coordinates and rotation in degrees.
-The runtime does the debounce, the slot matching, the netlist build and the
-event mapping. Nothing else in `main.js` changes.
+`onFrames` receives the **window** of the last five sighting frames, not a
+single frame. `runtime.place(frames)` runs the 3-of-5 debounce, and one frame
+can never satisfy it — earlier versions of this page said
+`runtime.place([frame])`, which silently produced nothing. Each entry is
+`{markerId, x, y, theta_deg}` in mat coordinates; the runtime does the debounce,
+the slot matching, the netlist build and the event mapping.
 
 ## 4. `stopLab`
 
